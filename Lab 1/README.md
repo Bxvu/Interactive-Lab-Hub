@@ -3,6 +3,7 @@
 # Staging Interaction
 
 \*\***NAME OF COLLABORATOR HERE**\*\*
+- Xuesi Chen, Akash Basu, Sean Lewis, Benthan Vu
 
 In the original stage production of Peter Pan, Tinker Bell was represented by a darting light created by a small handheld mirror off-stage, reflecting a little circle of light from a powerful lamp. Tinkerbell communicates her presence through this light to the other characters. See more info [here](https://en.wikipedia.org/wiki/Tinker_Bell). 
 
@@ -74,6 +75,21 @@ The interactive device can be anything *except* a computer, a tablet computer or
 
 \*\***Describe your setting, players, activity and goals here.**\*\*
 
+### Setting:
+The interaction takes place in a lively club environment. The “device” is imagined as part of the club’s lighting system, projecting colors onto a wall or ceiling to signal crowd activity. The time is during an event night when people are actively entering and leaving the space.
+### Players:
+Club guests who enter and exit the venue.
+The interactive device (light system) that responds to the number of people inside.
+### Activity:
+As people enter or leave the club, the device flashes or changes colors to communicate the change in occupancy. The light system doesn’t just track individual events (entry/exit), but also communicates the current “state” of the crowd with color-coded signals:
+Entry → white flash
+Exit → black flash
+Occupancy thresholds → black, green, yellow, red, or multicolor strobe.
+Wave Hand → light brightness/color saturation change.
+### Goals:
+Guests’ goal: enjoy the experience, understand crowd energy at a glance.
+Device’s goal: translate occupancy into an intuitive light signal, keeping everyone aware of the club’s vibe.
+
 Storyboards are a tool for visually exploring a users interaction with a device. They are a fast and cheap method to understand user flow, and iterate on a design before attempting to build on it. Take some time to read through this explanation of [storyboarding in UX design](https://www.smashingmagazine.com/2017/10/storyboarding-ux-design/). Sketch seven storyboards of the interactions you are planning. **It does not need to be perfect**, but must get across the behavior of the interactive device and the other characters in the scene. 
 
 \*\***Include pictures of your storyboards here**\*\*
@@ -81,16 +97,18 @@ Storyboards are a tool for visually exploring a users interaction with a device.
 Present your ideas to the other people in your breakout room (or in small groups). You can just get feedback from one another or you can work together on the other parts of the lab.
 
 \*\***Summarize feedback you got here.**\*\*
-
+1. The flashing for entry/exit events could be distracting if too frequent; maybe consider smoother transitions or subtler effects.
+2. Add more spatial features—for example, if people move to a corner of the room, the corresponding light could become brighter to indicate where the crowd is clustering.
 
 ## Part B. Act out the Interaction
 
-Try physically acting out the interaction you planned. For now, you can just pretend the device is doing the things you’ve scripted for it. 
+Try physically acting out the interaction you planned. For now, you can just pretend the device is doing the things you’ve scripted for it.
 
 \*\***Are there things that seemed better on paper than acted out?**\*\*
-
+1. On paper, the rapid flashes for entry/exit events seemed like a fun and clear signal. But when acted out, the flashes felt a bit too distracting and harsh, especially in quick succession. Similarly, the strobe effect at high occupancy looked more overwhelming than energizing in practice—it risked drawing attention away from the actual interaction.
 \*\***Are there new ideas that occur to you or your collaborator that come up from the acting?**\*\*
-
+1. Instead of sharp flashes, we could use gentler fades or pulsing lights for entry/exit to make the signals less disruptive.
+2. We thought about adding spatial responsiveness, where the lights brighten in the direction or corner of the room that people move toward, giving more context than just occupancy counts.
 
 ## Part C. Prototype the device
 
@@ -110,7 +128,7 @@ Take a little time to set up the wizarding set-up that allows for someone to rem
 
 \*\***Include your first attempts at recording the set-up video here.**\*\*
 
-Now, hange the goal within the same setting, and update the interaction with the paper prototype. 
+Now, change the goal within the same setting, and update the interaction with the paper prototype. 
 
 \*\***Show the follow-up work here.**\*\*
 
@@ -122,17 +140,31 @@ Only now should you start worrying about what the device should look like. Devel
 Think about the setting of the device: is the environment a place where the device could overheat? Is water a danger? Does it need to have bright colors in an emergency setting?
 
 \*\***Include sketches of what your devices might look like here.**\*\*
+Prototype #1:
+![Sketch Prototype#1](prototype#1.png)
+![Prototype](prototype.png)
+Prototype #2:
+![Sketch Prototype#2](prototype#2.png)
+![Prototype](prototype.png)
+Prototype #3:
+![Sketch Prototype#3](prototype#3.pdf)
+![Prototype](prototype.png)
 
 \*\***What concerns or opportunitities are influencing the way you've designed the device to look?**\*\*
+### Concerns:
+The interaction setting requires strong, noticeable lighting. This means the device either needs to achieve higher brightness levels or we may need to use multiple phones as light sources to ensure visibility in a larger or darker environment.
+### Opportunitities
+The reliance on light opens up creative opportunities for expressive visual effects (color shifts, strobes, gradients) that can enhance the atmosphere. The device can also be scaled by adding more phones or light sources, turning a simple prototype into a flexible system for clubs, bedrooms, or events where light-based cues make the experience more engaging.
 
 
 ## Part F. Record
 
 \*\***Take a video of your prototyped interaction.**\*\*
+https://drive.google.com/file/d/1pbtOFvbayS1YrIoZbZ7TKoyE5s4KkZQP/view?usp=drive_link
 
 \*\***Please indicate who you collaborated with on this Lab.**\*\*
 Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
-
+COLLABORATOR: Xuesi Chen, Akash Basu, Sean Lewis, Benthan Vu
 
 
 # Staging Interaction, Part 2 
