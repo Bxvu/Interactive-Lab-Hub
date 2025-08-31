@@ -164,8 +164,8 @@ The reliance on light opens up creative opportunities for expressive visual effe
 ## Part F. Record
 
 \*\***Take a video of your prototyped interaction.**\*\*
-![Video](https://drive.google.com/file/d/1pbtOFvbayS1YrIoZbZ7TKoyE5s4KkZQP/view?usp=drive_link)
-
+- https://drive.google.com/file/d/1cWq--9xLO1f24VaHUQfTXOB4rrTWSOIh/view?usp=drive_link
+  
 \*\***Please indicate who you collaborated with on this Lab.**\*\*
 Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
 COLLABORATOR: Xuesi Chen, Akash Basu, Sean Lewis, Benthan Vu
