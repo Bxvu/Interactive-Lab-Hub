@@ -93,6 +93,10 @@ Device’s goal: translate occupancy into an intuitive light signal, keeping eve
 Storyboards are a tool for visually exploring a users interaction with a device. They are a fast and cheap method to understand user flow, and iterate on a design before attempting to build on it. Take some time to read through this explanation of [storyboarding in UX design](https://www.smashingmagazine.com/2017/10/storyboarding-ux-design/). Sketch seven storyboards of the interactions you are planning. **It does not need to be perfect**, but must get across the behavior of the interactive device and the other characters in the scene. 
 
 \*\***Include pictures of your storyboards here**\*\*
+![Storyboard 1+2+3](storyboard1_2_3.png)
+![Storyboard 4+5](storyboard4_5.png)
+![Storyboard 6+7](storyboard6_7.png)
+![Storyboard 8](storyboard8.png)
 
 Present your ideas to the other people in your breakout room (or in small groups). You can just get feedback from one another or you can work together on the other parts of the lab.
 
@@ -141,14 +145,14 @@ Think about the setting of the device: is the environment a place where the devi
 
 \*\***Include sketches of what your devices might look like here.**\*\*
 Prototype #1:
-![Sketch Prototype#1](prototype#1.png)
-![Prototype](prototype.png)
+![Sketch Prototype#1](sketch1.png)
+![Prototype](costume1.jpg)
 Prototype #2:
-![Sketch Prototype#2](prototype#2.png)
-![Prototype](prototype.png)
+![Sketch Prototype#2](sketch2.png)
+![Prototype](costume2-1.jpg)
 Prototype #3:
-![Sketch Prototype#3](prototype#3.pdf)
-![Prototype](prototype.png)
+![Sketch Prototype#3](sketch3.png)
+![Prototype](costume3-1.jpg)
 
 \*\***What concerns or opportunitities are influencing the way you've designed the device to look?**\*\*
 ### Concerns:
@@ -160,7 +164,7 @@ The reliance on light opens up creative opportunities for expressive visual effe
 ## Part F. Record
 
 \*\***Take a video of your prototyped interaction.**\*\*
-https://drive.google.com/file/d/1pbtOFvbayS1YrIoZbZ7TKoyE5s4KkZQP/view?usp=drive_link
+![Video](https://drive.google.com/file/d/1pbtOFvbayS1YrIoZbZ7TKoyE5s4KkZQP/view?usp=drive_link)
 
 \*\***Please indicate who you collaborated with on this Lab.**\*\*
 Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
