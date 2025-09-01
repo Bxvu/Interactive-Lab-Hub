@@ -171,7 +171,15 @@ The reliance on light opens up creative opportunities for expressive visual effe
 ## Part F. Record
 
 \*\***Take a video of your prototyped interaction.**\*\*
-- https://drive.google.com/file/d/1cWq--9xLO1f24VaHUQfTXOB4rrTWSOIh/view?usp=drive_link
+
+**Click on the below image to play the video on YouTube**
+**Interaction 1**
+[![Interaction 1](https://img.youtube.com/vi/8-qJKf9TseE/maxresdefault.jpg)](https://youtu.be/8-qJKf9TseE)
+**Interaction 2**
+[![Interaction 2](https://img.youtube.com/vi/hpOWgV1T7n8/maxresdefault.jpg)](https://youtu.be/hpOWgV1T7n8)
+**Interaction 8**
+[![Interaction 8](https://img.youtube.com/vi/70Q2abh3BmU/maxresdefault.jpg)](https://youtu.be/70Q2abh3BmU)
+**Music Credit: Seize the Day by Andrey Rossi**
   
 \*\***Please indicate who you collaborated with on this Lab.**\*\*
 Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
