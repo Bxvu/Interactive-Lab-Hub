@@ -110,6 +110,7 @@ Try physically acting out the interaction you planned. For now, you can just pre
 
 \*\***Are there things that seemed better on paper than acted out?**\*\*
 1. On paper, the rapid flashes for entry/exit events seemed like a fun and clear signal. But when acted out, the flashes felt a bit too distracting and harsh, especially in quick succession. Similarly, the strobe effect at high occupancy looked more overwhelming than energizing in practice—it risked drawing attention away from the actual interaction.
+
 \*\***Are there new ideas that occur to you or your collaborator that come up from the acting?**\*\*
 1. Instead of sharp flashes, we could use gentler fades or pulsing lights for entry/exit to make the signals less disruptive.
 2. We thought about adding spatial responsiveness, where the lights brighten in the direction or corner of the room that people move toward, giving more context than just occupancy counts.
@@ -125,7 +126,7 @@ We invented this tool for this lab!
 If you run into technical issues with this tool, you can also use a light switch, dimmer, etc. that you can can manually or remotely control.
 
 \*\***Give us feedback on Tinkerbelle.**\*\*
-
+The app was pretty useful for allowing us to film our demo without having to actually implement it.
 
 ## Part D. Wizard the device
 Take a little time to set up the wizarding set-up that allows for someone to remotely control the device while someone acts with it. Hint: You can use Zoom to record videos, and you can pin someone’s video feed if that is the scene which you want to record. 
@@ -168,8 +169,20 @@ The reliance on light opens up creative opportunities for expressive visual effe
   
 \*\***Please indicate who you collaborated with on this Lab.**\*\*
 Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
-COLLABORATOR: Xuesi Chen, Akash Basu, Sean Lewis, Benthan Vu
 
+**Akash Batu: Storyboards #1, #2, #3, #4, #5, Wizarding Tinkerbelle**
+
+**Benthan Vu: Costume #1, Paper Prototype #1, Research & Feedback**
+
+**Carrie Wang: Wizarding the Device, Research & Feedback**
+
+**Evan Fang: Costume #2, Paper Prototype #2, Storyboard #8**
+
+**Sean Lewis: Storyboards #6, #7, Setting up Tinkerbelle**
+
+**Xuesi Chen: Costume #3, Paper Prototype #3, Demo Video Recording and Editing**
+
+****All: Ideating, Research, Video Enactment, Communication
 
 # Staging Interaction, Part 2 
 
