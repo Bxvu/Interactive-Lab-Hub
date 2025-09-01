@@ -126,6 +126,7 @@ We invented this tool for this lab!
 If you run into technical issues with this tool, you can also use a light switch, dimmer, etc. that you can can manually or remotely control.
 
 \*\***Give us feedback on Tinkerbelle.**\*\*
+
 The app was pretty useful for allowing us to film our demo without having to actually implement it.
 
 ## Part D. Wizard the device
@@ -133,10 +134,15 @@ Take a little time to set up the wizarding set-up that allows for someone to rem
 
 \*\***Include your first attempts at recording the set-up video here.**\*\*
 
+https://drive.google.com/file/d/16q-3w8YigNP197h42Bvn3zztaeE_BG9u/view?usp=drivesdk
+
 Now, change the goal within the same setting, and update the interaction with the paper prototype. 
 
 \*\***Show the follow-up work here.**\*\*
 
+The goal is to flash the screen/lighting to white when someone enters the club.
+
+https://drive.google.com/file/d/1J1FyKKDYUBOAUYOVXfMGRHcnORAxiIA1/view?usp=drivesdk
 
 ## Part E. Costume the device
 
