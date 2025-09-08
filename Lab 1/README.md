@@ -93,10 +93,10 @@ Device’s goal: translate occupancy into an intuitive light signal, keeping eve
 Storyboards are a tool for visually exploring a users interaction with a device. They are a fast and cheap method to understand user flow, and iterate on a design before attempting to build on it. Take some time to read through this explanation of [storyboarding in UX design](https://www.smashingmagazine.com/2017/10/storyboarding-ux-design/). Sketch seven storyboards of the interactions you are planning. **It does not need to be perfect**, but must get across the behavior of the interactive device and the other characters in the scene. 
 
 \*\***Include pictures of your storyboards here**\*\*
-![Storyboard 1+2+3](storyboard1_2_3.png)
-![Storyboard 4+5](storyboard4_5.png)
-![Storyboard 6+7](storyboard6_7.png)
-![Storyboard 8](storyboard8.png)
+![Storyboard 1+2+3](part%201a/storyboard1_2_3.png)
+![Storyboard 4+5](part%201a/storyboard4_5.png)
+![Storyboard 6+7](part%201a/storyboard6_7.png)
+![Storyboard 8](part%201a/storyboard8.png)
 
 Present your ideas to the other people in your breakout room (or in small groups). You can just get feedback from one another or you can work together on the other parts of the lab.
 
@@ -152,14 +152,14 @@ Think about the setting of the device: is the environment a place where the devi
 
 \*\***Include sketches of what your devices might look like here.**\*\*
 Prototype #1:
-![Sketch Prototype#1](sketch1.png)
-![Prototype](costume1.jpg)
+![Sketch Prototype#1](part%201a/sketch1.png)
+![Prototype](part%201a/costume1.jpg)
 Prototype #2:
-![Sketch Prototype#2](sketch2.png)
-![Prototype](costume2-1.jpg)
+![Sketch Prototype#2](part%201a/sketch2.png)
+![Prototype](part%201a/costume2-1.jpg)
 Prototype #3:
-![Sketch Prototype#3](sketch3.png)
-![Prototype](costume3-1.jpg)
+![Sketch Prototype#3](part%201a/sketch3.png)
+![Prototype](part%201a/costume3-1.jpg)
 
 \*\***What concerns or opportunitities are influencing the way you've designed the device to look?**\*\*
 ### Concerns:
@@ -294,4 +294,19 @@ The reliance on light opens up creative opportunities for expressive visual effe
 [![Interaction 3](https://img.youtube.com/vi/fyvJGDlQWNw/maxresdefault.jpg)](https://youtu.be/fyvJGDlQWNw)
 
 
+\*\***Please indicate who you collaborated with on this Lab.**\*\*
+Be generous in acknowledging their contributions! And also recognizing any other influences (e.g. from YouTube, Github, Twitter) that informed your design. 
 
+**Akash Batu: Storyboards #1, #2, #3, #4, #5, #6, #7, Video Recorder, Costume #3, Paper Prototype #3**
+
+**Benthan Vu: Costume #1, Paper Prototype #1, Video Participant**
+
+**Carrie Wang: Device Renderings**
+
+**Evan Fang: Costume #4, Paper Prototype #4**
+
+**Sean Lewis: Video Participant, Video Editing**
+
+**Xuesi Chen: Costume #2, Paper Prototype #2**
+
+****All: Ideating, Research, Communication
