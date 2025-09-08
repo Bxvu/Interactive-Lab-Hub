@@ -236,19 +236,45 @@ Device’s goal: translate occupancy into an intuitive light signal, keep watch 
 
 ## New storyboards
 \*\***Include pictures of your storyboards here**\*\*
-![Storyboard 1+2+3](storyboard1_5.png)
+
+### Some extras not shown in the storyboards below
+#### Interaction #1 also has beeping noises to alert the parent to follow after their child
+#### Interaction #2 additionally calls the cops as well as makes beeping noises
+![Storyboard 1-5](part%201b/storyboard1-5.png)
+![Storyboard 6-7](part%201b/storyboard6-7.png)
+
+## Device mockups
+
+![Fence](part%201b/direct_light.png)
+![Fence2](part%201b/node%20lighting.png)
+
+![Pole](part%201b/red_background.png)
+![Pole2](part%201b/yellow.png)
+![Pole3](part%201b/green.png)
 
 ## New costumes
 \*\***Include sketches of what your devices might look like here.**\*\*
+
 Prototype #1:
-![Sketch Prototype#1](sketch1.png)
-![Prototype](costume1.jpg)
+
+![Sketch Prototype#1](part%201b/costume1_sketch.png)
+![Prototype](part%201b/costume1_1.jpg)
+![Prototype](part%201b/costume1_2.jpg)
+
 Prototype #2:
-![Sketch Prototype#2](sketch2.png)
-![Prototype](costume2-1.jpg)
+
+![Sketch Prototype#1](part%201b/costume2_sketch.jpg)
+![Prototype](part%201b/costume2_1.jpg)
+
 Prototype #3:
-![Sketch Prototype#3](sketch3.png)
-![Prototype](costume3-1.jpg)
+
+![Sketch Prototype#1](part%201b/costume3_sketch.png)
+![Prototype](part%201b/costume3_1.png)
+
+Prototype #4:
+
+![Sketch Prototype#1](part%201b/costume4_sketch.png)
+![Prototype](part%201b/costume4_1.jpg)
 
 \*\***What concerns or opportunitities are influencing the way you've designed the device to look?**\*\*
 ### Concerns:
@@ -259,5 +285,13 @@ The reliance on light opens up creative opportunities for expressive visual effe
 
 ## New video demonstrations
 \*\***Take a video of your prototyped interaction.**\*\*
+
 **Interaction 1**
+[![Interaction 1](https://img.youtube.com/vi/09msoKip1cc/maxresdefault.jpg)](https://youtu.be/09msoKip1cc)
+**Interaction 2**
+[![Interaction 2](https://img.youtube.com/vi/t-9dse50vPA/maxresdefault.jpg)](https://youtu.be/t-9dse50vPA)
+**Interaction 3**
+[![Interaction 3](https://img.youtube.com/vi/fyvJGDlQWNw/maxresdefault.jpg)](https://youtu.be/fyvJGDlQWNw)
+
+
 
