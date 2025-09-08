@@ -208,6 +208,7 @@ This describes the second week's work for this lab activity.
 You will be assigned three partners from other groups. Go to their github pages, view their videos, and provide them with reactions, suggestions & feedback: explain to them what you saw happening in their video. Guess the scene and the goals of the character. Ask them about anything that wasn’t clear. 
 
 \*\***Summarize feedback from your partners here.**\*\*
+Feedback from a canvas comment said that this seems useful for clubs and security or safety limits. They were unsure of the character goals from the videos and said maybe we could include more people in the demo. 
 
 ## Make it your own
 
@@ -217,3 +218,46 @@ Do last week’s assignment again, but this time:
 3) We will be grading with an emphasis on creativity. 
 
 \*\***Document everything here. (Particularly, we would like to see the storyboard and video, although photos of the prototype are also great.)**\*\*
+
+## New environment
+### Setting:
+The interaction now takes place in a park. Instead of being a lighting system, this device, in addition to its original goal of keeping count of people exiting and entering, now is used to detect events that may warrant action, such as a small child escaping from their parents sight, or a fight breaking out. 
+### Players:
+People entering, exiting, and moving around the park.
+### Activity:
+As people enter or leave the park, the device flashes or changes colors to communicate the change in occupancy. Like before, the light system doesn’t just track individual events (entry/exit), but also communicates the current “state” of the crowd with color-coded signals:
+Entry → white flash
+Exit → black flash
+Occupancy thresholds → black, green, yellow, red, or multicolor strobe.
+However, something different from before is that there will be an additional camera/sensor that detects dangerous or harmful events happening in the park, making noise to bring attention to it, or even calling police to help deal with it. 
+### Goals:
+Guests’ goal: be able to see crowdedness of the park, and be notified of dangerous events nearby.
+Device’s goal: translate occupancy into an intuitive light signal, keep watch for dangerous events and notify authorities if needed.
+
+## New storyboards
+\*\***Include pictures of your storyboards here**\*\*
+![Storyboard 1+2+3](storyboard1_5.png)
+
+## New costumes
+\*\***Include sketches of what your devices might look like here.**\*\*
+Prototype #1:
+![Sketch Prototype#1](sketch1.png)
+![Prototype](costume1.jpg)
+Prototype #2:
+![Sketch Prototype#2](sketch2.png)
+![Prototype](costume2-1.jpg)
+Prototype #3:
+![Sketch Prototype#3](sketch3.png)
+![Prototype](costume3-1.jpg)
+
+\*\***What concerns or opportunitities are influencing the way you've designed the device to look?**\*\*
+### Concerns:
+Since the device is now in the sunlight due to it being in the park, we added a little shade area over the light display in costume 1, to hopefully allow the light color to not be overpowered by sunlight.
+### Opportunitities
+The reliance on light opens up creative opportunities for expressive visual effects (color shifts, strobes, gradients) that can enhance the atmosphere. At nighttime, having multicolored lights throughout the park can help prevent dangerous events that may have happened to the lack of light. The device can also be scaled by adding more throughout the park, all keeping track of dangerous events and count of people.
+
+
+## New video demonstrations
+\*\***Take a video of your prototyped interaction.**\*\*
+**Interaction 1**
+
