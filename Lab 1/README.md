@@ -243,6 +243,16 @@ Device’s goal: translate occupancy into an intuitive light signal, keep watch 
 ![Storyboard 1-5](part%201b/storyboard1-5.png)
 ![Storyboard 6-7](part%201b/storyboard6-7.png)
 
+## Reflections
+\*\***Summarize feedback you got here.**\*\*
+1. The noises may be disruptive to people if there are a lot of devices. The device also be may be a bit too small to indicate the amount of people in the park with light color.
+
+\*\***Are there things that seemed better on paper than acted out?**\*\*
+1. On paper, calling the police if a dangerous event seems to be happening may be a bit too annoying for the police if the event ends before they get there. Like if people start fighting, and then stop because of the device detecting them. Maybe there needs to be some threshold, like notifying park officers first before getting people further away to help.
+
+\*\***Are there new ideas that occur to you or your collaborator that come up from the acting?**\*\*
+1. The device could also be used to detect wildlife, maybe to keep track of changes in their behavior.
+
 ## Device mockups
 
 ![Fence](part%201b/direct_light.png)
