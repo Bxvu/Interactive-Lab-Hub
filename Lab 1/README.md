@@ -286,6 +286,7 @@ The reliance on light opens up creative opportunities for expressive visual effe
 ## New video demonstrations
 \*\***Take a video of your prototyped interaction.**\*\*
 
+**Click on the below image to play the video on YouTube**
 **Interaction 1**
 [![Interaction 1](https://img.youtube.com/vi/09msoKip1cc/maxresdefault.jpg)](https://youtu.be/09msoKip1cc)
 **Interaction 2**
