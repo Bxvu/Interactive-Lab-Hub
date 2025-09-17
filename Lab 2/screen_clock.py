@@ -2,6 +2,8 @@ import time
 import subprocess
 import digitalio
 import board
+import math
+import random
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_rgb_display.st7789 as st7789
 
@@ -60,14 +62,116 @@ backlight = digitalio.DigitalInOut(board.D22)
 backlight.switch_to_output()
 backlight.value = True
 
-while True:
-    # Draw a black filled box to clear the image.
-    draw.rectangle((0, 0, width, height), outline=0, fill=400)
+buttonA = digitalio.DigitalInOut(board.D23)    # GPIO23 (PIN 16)
+buttonB = digitalio.DigitalInOut(board.D24)    # GPIO24 (PIN 18)
+# Use internal pull-ups; buttons then read LOW when pressed.
+buttonA.switch_to_input(pull=digitalio.Pull.UP)
+buttonB.switch_to_input(pull=digitalio.Pull.UP)
 
-    #TODO: Lab 2 part D work should be filled in here. You should be able to look in cli_clock.py and stats.py 
-    y = top
-    draw.text((x, y), time.strftime("%m/%d/%Y %H:%M:%S"), font=font, fill="#FFFFFF")
+angle = 0
+rotation_speed = 0.5
+
+ORBIT_RADIUS = 75
+SUN_RADIUS = 15
+MOON_RADIUS = 10
+CENTER_X, CENTER_Y = width // 2, height
+
+DAY_BG = (135, 206, 235)
+NIGHT_BG = (15, 15, 50)
+WHITE = (255, 255, 255)
+YELLOW = (255, 255, 0)
+LIGHT_GRAY = (200, 200, 200)
+
+clouds = []
+cloud_image = Image.open("cloud.webp").convert("RGBA")
+cloud_image = cloud_image.resize((30, 20))
+
+while True:
+    angle_rad = math.radians(angle)
+    sun_y = CENTER_Y + ORBIT_RADIUS * math.sin(angle_rad)
+
+    a_pressed = (buttonA.value == False)
+    b_pressed = (buttonB.value == False)
+
+    if a_pressed and b_pressed:
+        rotation_speed = 5.0
+    else:
+        rotation_speed = 0.5
+
+    if a_pressed and not b_pressed:
+        if sun_y < CENTER_Y:
+            draw.rectangle((0, 0, width, height), fill=NIGHT_BG)
+        else:
+            draw.rectangle((0, 0, width, height), fill=DAY_BG)
+        moon_x = CENTER_X + ORBIT_RADIUS * math.cos(angle_rad)
+        moon_y = CENTER_Y + ORBIT_RADIUS * math.sin(angle_rad)
+
+        sun_x = CENTER_X + ORBIT_RADIUS * math.cos(angle_rad + math.pi)
+        sun_y = CENTER_Y + ORBIT_RADIUS * math.sin(angle_rad + math.pi)
+    else:
+        if sun_y < CENTER_Y:
+            draw.rectangle((0, 0, width, height), fill=DAY_BG)
+        else:
+            draw.rectangle((0, 0, width, height), fill=NIGHT_BG)
+        sun_x = CENTER_X + ORBIT_RADIUS * math.cos(angle_rad)
+        sun_y = CENTER_Y + ORBIT_RADIUS * math.sin(angle_rad)
+
+        moon_x = CENTER_X + ORBIT_RADIUS * math.cos(angle_rad + math.pi)
+        moon_y = CENTER_Y + ORBIT_RADIUS * math.sin(angle_rad + math.pi)
+
+    if b_pressed and not a_pressed:
+        direction = random.choice([-1, 1])
+        start_y = random.randint(50, height - 50)
+        new_cloud = {
+            'x': 0 if direction == 1 else width,
+            'y': random.randint(0, height // 4),
+            'speed': random.uniform(0.5, 1.5),
+            'direction': direction,
+            'image': cloud_image
+        }
+        clouds.append(new_cloud)
+
+    for cloud in clouds:
+        cloud['x'] += cloud['speed'] * cloud['direction']
+        draw.bitmap((cloud['x'], cloud['y']), cloud['image'], fill=WHITE)
+
+    clouds = [cloud for cloud in clouds if 0 < cloud['x'] < width]
+
+    draw.ellipse(
+        (CENTER_X - ORBIT_RADIUS, CENTER_Y - ORBIT_RADIUS, 
+         CENTER_X + ORBIT_RADIUS, CENTER_Y + ORBIT_RADIUS),
+        outline=WHITE, width=1
+    )
+    draw.ellipse(
+        (sun_x - SUN_RADIUS, sun_y - SUN_RADIUS,
+         sun_x + SUN_RADIUS, sun_y + SUN_RADIUS),
+        fill=YELLOW
+    )
+    draw.ellipse(
+        (moon_x - MOON_RADIUS, moon_y - MOON_RADIUS,
+         moon_x + MOON_RADIUS, moon_y + MOON_RADIUS),
+        fill=LIGHT_GRAY
+    )
+    
+
+    # Draw the time text
+    # x = CENTER_X - 40
+    # y = 0
+    # draw.text((x, y), time.strftime("%m/%d/%y"), font=font, fill="#FFFFFF")
+    # draw.text((x, y + 20), time.strftime("%I:%M %p"), font=font, fill="#FFFFFF")
 
     # Display image.
     disp.image(image, rotation)
-    time.sleep(1)
+    
+    angle += rotation_speed
+    if random.random() < 0.02:
+        direction = random.choice([-1, 1])
+        new_cloud = {
+            'x': 0 if direction == 1 else width,
+            'y': random.randint(0, height // 4),
+            'speed': random.uniform(0.5, 1.5),
+            'direction': direction,
+            'image': cloud_image
+        }
+        clouds.append(new_cloud)
+    time.sleep(0.01)
