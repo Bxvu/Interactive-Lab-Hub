@@ -226,6 +226,8 @@ Code is in screen_clock.py
 
 \*\*\***Take a video of your PiClock.**\*\*\*
 
+***Click on the below image to play the video on YouTube***
+[![Interaction 1](https://img.youtube.com/vi/rttaxZPyjz0/maxresdefault.jpg)](https://youtu.be/rttaxZPyjz0)
 After you edit and work on the scripts for Lab 2, the files should be upload back to your own GitHub repo! You can push to your personal github repo by adding the files here, commiting and pushing.
 
 ```
