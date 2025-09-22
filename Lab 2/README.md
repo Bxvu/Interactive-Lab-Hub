@@ -216,6 +216,11 @@ Please sketch/diagram your clock idea. (Try using a [Verplank digram](http://www
 \*\*\***A copy of your code should be in your Lab 2 Github repo.**\*\*\*
 
 
+Code is in screen_clock.py
+
+
+![Verplank Diagram](part%202f/verplank.png)
+
 ## Assignment that was formerly Part F. 
 ## Make a short video of your modified barebones PiClock
 
