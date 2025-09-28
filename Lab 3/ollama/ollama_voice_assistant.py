@@ -30,7 +30,8 @@ if sys.stderr.encoding != 'UTF-8':
 
 try:
     import pyttsx3
-    TTS_ENGINE = 'pyttsx3'
+    TTS_ENGINE = 'espeak'  # Force espeak to avoid voice issues
+    print("Using espeak for TTS (bypassing pyttsx3 voice issues)")
 except ImportError:
     TTS_ENGINE = 'espeak'
     print("pyttsx3 not available, using espeak for TTS")
@@ -41,11 +42,9 @@ class OllamaVoiceAssistant:
         self.ollama_url = ollama_url
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
+        self.tts_engine_type = TTS_ENGINE  # Store the engine type
         
-        # Initialize TTS
-        if TTS_ENGINE == 'pyttsx3':
-            self.tts_engine = pyttsx3.init()
-            self.tts_engine.setProperty('rate', 150)  # Speed of speech
+        print(f"Using {self.tts_engine_type} for text-to-speech")
         
         # Test Ollama connection
         self.test_ollama_connection()
@@ -83,12 +82,12 @@ class OllamaVoiceAssistant:
         clean_text = text.encode('ascii', 'ignore').decode('ascii')
         print(f"Assistant: {clean_text}")
         
-        if TTS_ENGINE == 'pyttsx3':
-            self.tts_engine.say(clean_text)
-            self.tts_engine.runAndWait()
-        else:
-            # Use espeak as fallback
-            subprocess.run(['espeak', clean_text], check=False)
+        # Use espeak directly to avoid pyttsx3 voice issues
+        try:
+            subprocess.run(['espeak', '-s', '160', clean_text], check=False)
+        except Exception as e:
+            print(f"TTS error: {e}")
+            print(f"Assistant said: {clean_text}")
 
     def listen(self):
         """Listen for speech and convert to text"""

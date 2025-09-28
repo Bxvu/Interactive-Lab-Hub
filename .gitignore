@@ -4,3 +4,6 @@
 venv
 venv*
 __*
+Lab 3/en_US-lessac-medium.onnx.json
+.gitignore
+Lab 3/en_US-lessac-medium.onnx
