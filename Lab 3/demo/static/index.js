@@ -174,10 +174,10 @@ vegaEmbed('#chart', vlSpec).then( (res) => {
   let counter = -1;
   let cat = ['x', 'y', 'z']
   let minimumX = -100;
-   socket.on('pong-gps', (new_x,new_y,new_z) => {
+   socket.on('pong-gps', (data) => {
     counter++;
     minimumX++;
-    const newVals = [new_x, new_y, new_z].map((c,v) => {
+    const newVals = [data.x, data.y, data.z].map((c,v) => {
       return {
       x: counter,
       y: c,
