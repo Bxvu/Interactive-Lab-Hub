@@ -1,0 +1,1 @@
+echo "Hello, Benthan Vu" | festival --tts

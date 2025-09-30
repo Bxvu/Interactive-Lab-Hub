@@ -147,6 +147,8 @@ python faster_whisper_try.py
 ```
 \*\***Write your own shell file that verbally asks for a numerical based input (such as a phone number, zipcode, number of pets, etc) and records the answer the respondent provides.**\*\*
 
+It is in the repository in part 1/input.sh
+
 ### 🤖 NEW: AI-Powered Conversations with Ollama
 
 Want to add intelligent conversation capabilities to your voice projects? **Ollama** lets you run AI models locally on your Raspberry Pi for sophisticated dialogue without requiring internet connectivity!
@@ -214,6 +216,8 @@ answer = ask_ai("How should I greet users?")
 
 \*\***Try creating a simple voice interaction that combines speech recognition, Ollama processing, and text-to-speech output. Document what you built and how users responded to it.**\*\*
 
+I used the 2nd example given. After figuring my way around some errors that prevented it from working initially, I told my roommates to say hi to it. It eventually said hi back. Then my housemates asked it some questions like what color is the sky. It had a long response time and this bored the roommates so they left.
+
 ### Serving Pages
 
 In Lab 1, we served a webpage with flask. In this lab, you may find it useful to serve a webpage for the controller on a remote device. Here is a simple example of a webserver.
@@ -240,7 +244,15 @@ Storyboard and/or use a Verplank diagram to design a speech-enabled device. (Stu
 
 Write out what you imagine the dialogue to be. Use cards, post-its, or whatever method helps you develop alternatives or group responses. 
 
+I imagine the dialogue to be mostly the participant talking to the duck when they are stuck on a problem, asking how they can solve it. I can also imagine them talking to the duck when it asks to be pet or interacted with.
+
+![Storyboard 1](part%201/storyboard_lab3-1.png)
+![Storyboard 2](part%201/storyboard_lab3-2.png)
+![Verplank Diagram](part%201/verplank_lab3.png)
+
 \*\***Please describe and document your process.**\*\*
+
+My process was I originally wanted to make a stuffed animal that reacted to you. Kind of like how children pretend that their stuffed animals are alive. I wanted to make it more than part of the imagination. But then I realized that probably wouldn't be very interactive. So I thought that instead, the stuffed animal could be like a desk buddy that allows you to set focus/break timers and during breaks ask you to interact with it, like petting it. You could also ask it questions as a way to get another opinion. I then drew out the storyboard and diagram, and asked a classmate to demo the interactions.
 
 ### Acting out the dialogue
 
@@ -248,10 +260,15 @@ Find a partner, and *without sharing the script with your partner* try out the d
 
 \*\***Describe if the dialogue seemed different than what you imagined when it was acted out, and how.**\*\*
 
+[![Interactions](https://img.youtube.com/vi/U9TLJgeX0vk/maxresdefault.jpg)](https://youtu.be/U9TLJgeX0vk)
+The dialogue seemed different because I was expecting the participant to be more aggressive towards the duck. I had a script where the participant would ignore the duck or throw it, but neither of those happened. I had to ask the participant to ignore the duck for the demo recording.
+
 ### Wizarding with the Pi (optional)
 In the [demo directory](./demo), you will find an example Wizard of Oz project. In that project, you can see how audio and sensor data is streamed from the Pi to a wizard controller that runs in the browser.  You may use this demo code as a template. By running the `app.py` script, you can see how audio and sensor data (Adafruit MPU-6050 6-DoF Accel and Gyro Sensor) is streamed from the Pi to a wizard controller that runs in the browser `http://<YouPiIPAddress>:5000`. You can control what the system says from the controller as well!
 
 \*\***Describe if the dialogue seemed different than what you imagined, or when acted out, when it was wizarded, and how.**\*\*
+
+There were some delays when wizarding the pi to make it say some words. In addition to that, the first part of some voice lines would get cut off so the full sentence wouldn't be heard. I was expecting the participant to not understand, but it looks like he was able to piece together what the duck meant from the few words that did go through.
 
 # Lab 3 Part 2
 
