@@ -1,3 +1,6 @@
 /.venv
 /ollama/ollama_venv
 /demo/woz
+output.txt
+welcome.wav
+test.txt
