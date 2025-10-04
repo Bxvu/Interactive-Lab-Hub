@@ -14,8 +14,8 @@ pyttsx3>=2.90
 # espeak (install with: sudo apt-get install espeak)
 
 # Optional: Enhanced audio processing
-# sounddevice>=0.4.6
-# numpy>=1.24.0
+sounddevice>=0.4.6
+numpy>=1.24.0
 
 # For web interface
 eventlet>=0.33.3

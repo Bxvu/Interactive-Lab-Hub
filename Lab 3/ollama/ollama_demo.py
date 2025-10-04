@@ -34,12 +34,17 @@ def speak_text(text):
 def query_ollama(prompt, model="phi3:mini"):
     """Send a text prompt to Ollama and get response"""
     try:
+        system_prompt = """You are a helpful voice assistant. Be friendly and engaging. If asked for help on a problem, provide your best correct response.
+            For example, if asked how to implement a for loop in a language, provide an extremly short example that could be spoken
+            in a voice response. If not possible to provide a concise answer, give a high level overview. Aim for clarity and brevity."""
+
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={
                 "model": model,
                 "prompt": prompt,
-                "stream": False
+                "stream": False,
+                "system": system_prompt
             },
             timeout=30
         )
@@ -63,7 +68,7 @@ def text_chat_demo():
             break
             
         print("Thinking...")
-        response = query_ollama(user_input)
+        response = query_ollama(user_input, model="gemma3:270m")
         print(f"Ollama: {response}")
 
 def voice_response_demo():
@@ -78,6 +83,7 @@ def voice_response_demo():
             break
             
         print("Thinking...")
+        # response = query_ollama(user_input, model="qwen2.5:0.5b-instruct")
         response = query_ollama(user_input)
         speak_text(response)
 

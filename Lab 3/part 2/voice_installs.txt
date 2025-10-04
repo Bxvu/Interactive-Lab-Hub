@@ -1,0 +1,4 @@
+need to run to get some voices
+
+python -m piper.download_voices en_GB-northern_english_male-medium   
+python -m piper.download_voices en_GB-semaine-medium

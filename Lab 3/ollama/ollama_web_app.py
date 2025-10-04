@@ -21,7 +21,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Ollama configuration
 OLLAMA_URL = "http://localhost:11434"
-DEFAULT_MODEL = "phi3:mini"
+DEFAULT_MODEL = "gemma3:270m" #"phi3:mini"
 
 def query_ollama(prompt, model=DEFAULT_MODEL):
     """Query Ollama and return response"""

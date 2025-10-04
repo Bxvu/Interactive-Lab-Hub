@@ -37,7 +37,8 @@ except ImportError:
     print("pyttsx3 not available, using espeak for TTS")
 
 class OllamaVoiceAssistant:
-    def __init__(self, model_name="phi3:mini", ollama_url="http://localhost:11434"):
+    # def __init__(self, model_name="phi3:mini", ollama_url="http://localhost:11434"):
+    def __init__(self, model_name="gemma3:270m", ollama_url="http://localhost:11434"):
         self.model_name = model_name
         self.ollama_url = ollama_url
         self.recognizer = sr.Recognizer()
