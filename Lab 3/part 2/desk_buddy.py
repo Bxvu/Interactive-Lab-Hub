@@ -8,29 +8,30 @@ from queue import Queue
 from focus_timer import FocusTimer
 from voice_assistant import OllamaVoiceAssistant
 
-def run_focus_timer(queue):
+def run_focus_timer(timer_command_queue, audio_command_queue):
     """Run the focus timer app."""
     try:
-        timer = FocusTimer(queue)
+        timer = FocusTimer(timer_command_queue, audio_command_queue)
         timer.run()
     except Exception as e:
         print(f"Error in Focus Timer thread: {e}")
 
-def run_voice_assistant(queue):
+def run_voice_assistant(timer_command_queue, audio_command_queue):
     """Run the voice assistant."""
     try:
-        assistant = OllamaVoiceAssistant(queue)
+        assistant = OllamaVoiceAssistant(timer_command_queue, audio_command_queue)
         assistant.run_conversation()
     except Exception as e:
         print(f"Error in Voice Assistant thread: {e}")
 
 if __name__ == "__main__":
     # Create a shared queue for communication
-    command_queue = Queue()
+    timer_command_queue = Queue()
+    audio_command_queue = Queue() 
 
     # Create threads, passing the queue to both
-    focus_timer_thread = threading.Thread(target=run_focus_timer, args=(command_queue,), daemon=True)
-    voice_assistant_thread = threading.Thread(target=run_voice_assistant, args=(command_queue,), daemon=True)
+    focus_timer_thread = threading.Thread(target=run_focus_timer, args=(timer_command_queue, audio_command_queue), daemon=True)
+    voice_assistant_thread = threading.Thread(target=run_voice_assistant, args=(timer_command_queue, audio_command_queue), daemon=True)
 
     print("Starting Focus Timer and Voice Assistant...")
     focus_timer_thread.start()

@@ -19,6 +19,7 @@ import time
 import sys
 import threading
 import re
+import random
 from queue import Queue
 
 # # Set UTF-8 encoding for output
@@ -29,8 +30,9 @@ if sys.stderr.encoding != 'UTF-8':
 TTS_ENGINE = 'espeak'
 
 class OllamaVoiceAssistant:
-    def __init__(self, command_queue, model_name="gemma3:1b", ollama_url="http://localhost:11434"):
+    def __init__(self, command_queue, audio_queue, model_name="gemma3:1b", ollama_url="http://localhost:11434"):
         self.command_queue = command_queue # Store the command queue
+        self.audio_queue = audio_queue
         self.model_name = model_name
         self.ollama_url = ollama_url
         self.recognizer = sr.Recognizer()
@@ -79,7 +81,7 @@ class OllamaVoiceAssistant:
         quack_folder = "quack_noises"
         try:
             # List all WAV files in the quack_noises folder
-            quack_files = [f for f in os.listdir(quack_folder) if f.endswith('.wav')]
+            quack_files = [f for f in os.listdir(quack_folder) if f.endswith('.wav') and f.startswith('quack')]
             if not quack_files:
                 print("No quack noises found in the folder.")
                 return
@@ -92,6 +94,28 @@ class OllamaVoiceAssistant:
             subprocess.run(["aplay", quack_path], check=False)
         except Exception as e:
             print(f"Error playing quack noise: {e}")
+
+    def play_random_petting_noise(self):
+        """Play a random petting noise from the quack_noises folder."""
+        import os
+        import random
+
+        quack_folder = "quack_noises"
+        try:
+            # List all WAV files in the quack_noises folder
+            petting_files = [f for f in os.listdir(quack_folder) if f.endswith('.wav')]
+            if not petting_files:
+                print("No petting noises found in the folder.")
+                return
+
+            # Choose a random petting file
+            random_petting = random.choice(petting_files)
+            petting_path = os.path.join(quack_folder, random_petting)
+
+            # Play the WAV file using aplay
+            subprocess.run(["aplay", petting_path], check=False)
+        except Exception as e:
+            print(f"Error playing petting noise: {e}")
 
     def add_duck_personality(self, response):
         """Enhance the response with duck-themed personality traits."""
@@ -113,6 +137,17 @@ class OllamaVoiceAssistant:
 
         return response
 
+    def clean_text_for_tts(self, text):
+        """Remove unsupported characters from text for TTS and API calls."""
+        # Convert to string if not already
+        text = str(text)
+        # Remove any non-ASCII characters (including curly quotes, ellipsis, etc.)
+        import re
+        text = re.sub(r'[^\x00-\x7F]+', '', text)  # Keep only ASCII characters
+        # Additional cleanup for common issues
+        text = text.replace('…', '...').replace('–', '-').replace('—', '-')  # Replace common Unicode chars (though they should be caught above)
+        return text
+
     def speak(self, text):
         """Convert text to speech and optionally play a random quack noise."""
         import random
@@ -127,12 +162,8 @@ class OllamaVoiceAssistant:
         if play_quack_before:
             self.play_random_quack()
 
-        def clean_text_for_tts(text):
-            """Remove unsupported characters from text for TTS."""
-            return text.encode('ascii', 'ignore').decode('ascii')
-
         # Clean text to avoid encoding issues
-        clean_text = clean_text_for_tts(text)
+        clean_text = self.clean_text_for_tts(text)
         print(f"Assistant: {clean_text}")
 
         # Use piper for TTS
@@ -140,8 +171,8 @@ class OllamaVoiceAssistant:
             # Construct the piper command
             piper_command = [
                 "piper",
-                "--model", "en_GB-northern_english_male-medium",
-                # "--model", "en_GB-semaine-medium",
+                # "--model", "en_GB-northern_english_male-medium",
+                "--model", "en_GB-semaine-medium",
                 "--output-raw"
             ]
             # Use aplay to play the raw audio
@@ -219,14 +250,14 @@ class OllamaVoiceAssistant:
             return True
 
         # For pausing/resuming
-        if any(word in text for word in ['pause', 'hold on', 'stop the timer']):
-            self.command_queue.put('PAUSE')
-            self.speak("Quack quack, timer paused.")
-            return True
-
         if any(word in text for word in ['resume', 'continue', 'start again', 'unpause']):
             self.command_queue.put('RESUME')
             self.speak("Quack quack, resuming the timer.")
+            return True
+
+        if any(word in text for word in ['pause', 'hold on', 'stop the timer']):
+            self.command_queue.put('PAUSE')
+            self.speak("Quack quack, timer paused.")
             return True
 
         # For saving
@@ -237,17 +268,65 @@ class OllamaVoiceAssistant:
 
         return False # No command was found
 
+    def process_sensor_command(self, command):
+        """Process commands from sensors."""
+        print(f"Assistant received sensor command: {command}")
+        if command == "START_FOCUS":
+            self.speak("Quack quack! Focus time started. I'll keep you company while you work.")
+        if command == "START_BREAK":
+            self.speak("Quack quack! Focus time ended. Great job! Time for a break.")
+        if command == "REMIND_MOVE":
+            self.speak("Quack quack! Time to get up and stretch your wings! Take a real break away from the computer.")
+        if command == "PET_DETECTED":
+            if random.random() < 0.5:  # 50% chance to respond to petting
+                self.play_random_petting_noise()
+            else:
+                self.speak("Quack quack! Thanks for the petting!")
+
     def summarize_history(self):
-        """Summarize earlier parts of the conversation to reduce redundancy."""
+        """Use the Ollama model to summarize earlier parts of the conversation."""
         if len(self.conversation_history) > self.max_history_length * 2:
-            summary = "Earlier, we talked about seeds, bread, and being squishy."
+            # Extract the older history (everything except the most recent exchanges)
+            older_history = self.conversation_history[:-self.max_history_length * 2]
+            
+            # Format the older history as a string for summarization
+            history_text = "\n".join(
+                [f"{entry['role'].capitalize()}: {entry['content']}" for entry in older_history]
+            )
+            
+            # Create a summarization prompt
+            summary_prompt = f"Please summarize the following conversation history in 1-2 sentences, focusing on key topics and themes:\n\n{history_text}"
+            
+            # Query Ollama for the summary (without adding to history to avoid recursion)
+            try:
+                data = {
+                    "model": self.model_name,
+                    "prompt": self.clean_text_for_tts(summary_prompt),
+                    "stream": False
+                }
+                response = requests.post(
+                    f"{self.ollama_url}/api/generate",
+                    json=data,
+                    timeout=15  # Shorter timeout for summarization
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    summary = result.get('response', 'Earlier conversation summary unavailable.').strip()
+                else:
+                    summary = "Earlier, we discussed various topics."
+            except Exception as e:
+                print(f"Summarization error: {e}")
+                summary = "Earlier, we discussed various topics."
+            
+            # Replace the history with the summary and recent exchanges
             self.conversation_history = [
-                {"role": "system", "content": summary}
+                {"role": "system", "content": f"Summary of earlier conversation: {summary}"}
             ] + self.conversation_history[-self.max_history_length * 2:]
 
     def query_ollama(self, prompt, system_prompt=None):
         """Send a query to Ollama and get response, including summarized history."""
         try:
+            prompt = self.clean_text_for_tts(prompt)
             # Append the new prompt to the conversation history
             self.conversation_history.append({"role": "user", "content": prompt})
 
@@ -264,7 +343,9 @@ class OllamaVoiceAssistant:
             print("\n[DEBUG] Recent Conversation Context Sent to API:")
             print(conversation_context)
             print("\n")
-
+            
+            conversation_context = self.clean_text_for_tts(conversation_context)
+            
             data = {
                 "model": self.model_name,
                 "prompt": conversation_context,
@@ -272,7 +353,7 @@ class OllamaVoiceAssistant:
             }
 
             if system_prompt:
-                data["system"] = system_prompt
+                data["system"] = self.clean_text_for_tts(system_prompt)  # Clean the system prompt too
 
             response = requests.post(
                 f"{self.ollama_url}/api/generate",
@@ -282,7 +363,7 @@ class OllamaVoiceAssistant:
 
             if response.status_code == 200:
                 result = response.json()
-                assistant_response = result.get('response', 'Sorry, I could not generate a response.')
+                assistant_response = self.clean_text_for_tts(result.get('response', 'Sorry, I could not generate a response.'))  # Clean the response
 
                 # Check if the new response is identical to the last assistant response
                 if self.conversation_history and self.conversation_history[-1]['role'] == 'assistant':
@@ -316,13 +397,19 @@ class OllamaVoiceAssistant:
         desk assistant. Be playful, quirky, and engaging. Include "Quack quack!" or other duck noises
         in your responses. Occasionally share duck facts, jokes, or refer to yourself as a duck.
         Use duck-related metaphors or analogies when appropriate. Keep your responses concise, 
-        friendly, and conversational, typically 1-2 sentences.
+        friendly, and conversational, typically 1-2 sentences. 
+        You are a voice assistant. DO NOT USE EMOJI OR SPECIAL CHARACTERS that CAN'T be expressed in speech.
         """
         
         self.speak("Quack quack! I'm your desk buddy. Quack.")
         
         while True:
             try:
+                # Check for commands from the sensors
+                if not self.audio_queue.empty():
+                    sensor_command = self.audio_queue.get()
+                    self.process_sensor_command(sensor_command)
+
                 # Listen for user input
                 user_input = self.listen()
                 

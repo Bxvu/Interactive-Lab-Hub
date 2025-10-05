@@ -110,3 +110,5 @@ SpeechRecognition>=3.10.0
 pyaudio>=0.2.11
 sounddevice>=0.4.6
 numpy>=1.24.0
+adafruit-circuitpython-lsm6ds
+sparkfun-qwiic-proximity

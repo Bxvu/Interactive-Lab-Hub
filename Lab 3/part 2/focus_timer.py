@@ -7,9 +7,10 @@ from PIL import Image, ImageDraw, ImageFont
 import adafruit_rgb_display.st7789 as st7789
 import busio
 from adafruit_bus_device.i2c_device import I2CDevice
+import qwiic_proximity
+from adafruit_lsm6ds.lsm6ds3 import LSM6DS3
+import subprocess
 
-# --- All your I2C and Display setup code goes here ---
-# (I've omitted it for brevity, but copy it from your original file)
 # --- I2C Button Setup ---
 DEVICE_ADDRESS = 0x6f
 STATUS = 0x03
@@ -55,8 +56,9 @@ buttonA.switch_to_input(pull=digitalio.Pull.UP)
 buttonB.switch_to_input(pull=digitalio.Pull.UP)
 
 class FocusTimer:
-    def __init__(self, command_queue):
+    def __init__(self, command_queue, audio_queue):
         self.command_queue = command_queue
+        self.audio_queue = audio_queue
         # --- App State and Configuration ---
         self.FOCUS_STATE = "FOCUS"
         self.BREAK_STATE = "BREAK"
@@ -73,6 +75,23 @@ class FocusTimer:
         self.NOTIFICATION_DURATION = 3
         self.notification_text = "Press any button to start"
         self.notification_end_time = time.monotonic() + 9999
+
+        # --- Proximity Sensor Setup ---
+        self.proximity_sensor = qwiic_proximity.QwiicProximity()
+        if not self.proximity_sensor.connected:
+            print("Proximity sensor not connected. Please check the connection.")
+        else:
+            self.proximity_sensor.begin()
+        self.proximity_threshold = 500  # Adjust this value based on your setup
+        self.last_proximity_alert_time = 0  # Track the last time a reminder was sent
+        self.proximity_alert_interval = 60  # Minimum interval between reminders (in seconds)
+
+        # --- Accelerometer Setup ---
+        i2c = board.I2C()
+        self.accelerometer = LSM6DS3(i2c)
+        self.pet_threshold = 15  # Adjust this value based on your setup
+        self.last_pet_time = 0  # Track the last time a petting action was detected
+        self.pet_cooldown = 5  # Minimum interval between pet detections (in seconds)
 
     def display_notification(self, message):
         self.notification_text = message
@@ -99,6 +118,31 @@ class FocusTimer:
             minutes = int(command[1:])
             self.remaining_seconds = max(0, self.remaining_seconds - (minutes * 60))
 
+    def monitor_proximity(self):
+        """Check the proximity sensor during break time."""
+        if self.current_state == self.BREAK_STATE and not self.is_paused:
+            current_time = time.monotonic()
+            if current_time - self.last_proximity_alert_time >= self.proximity_alert_interval:
+                prox_value = self.proximity_sensor.get_proximity()
+                print(f"Proximity Value: {prox_value}")
+                if prox_value > self.proximity_threshold:
+                    self.audio_queue.put("REMIND_MOVE")
+                    self.last_proximity_alert_time = current_time
+
+    def detect_petting(self):
+        """Detect petting action using the accelerometer."""
+        try:
+            accel_x, accel_y, accel_z = self.accelerometer.acceleration
+            magnitude = (accel_x**2 + accel_y**2 + accel_z**2)**0.5
+            current_time = time.monotonic()
+
+            # Check if the magnitude exceeds the threshold and cooldown has passed
+            if magnitude > self.pet_threshold and (current_time - self.last_pet_time) > self.pet_cooldown:
+                self.audio_queue.put("PET_DETECTED")
+                self.last_pet_time = current_time
+        except Exception as e:
+            print(f"Error reading accelerometer: {e}")
+
     def run(self):
         while True:
             # Check for commands from the voice assistant
@@ -106,10 +150,12 @@ class FocusTimer:
                 command = self.command_queue.get()
                 self.process_voice_command(command)
 
-            # --- The rest of your main loop logic goes here ---
-            # This is the same button-handling, timer countdown, and drawing
-            # code from your previous version.
-            # (Omitted for brevity, copy it here)
+            # Monitor proximity sensor during break time
+            self.monitor_proximity()
+
+            # Detect petting action
+            self.detect_petting()
+
             # 2. Update State based on Inputs
             if self.notification_end_time < time.monotonic(): # Clear notification once expired
                 self.notification_text = ""
@@ -152,8 +198,6 @@ class FocusTimer:
                 self.is_paused = not self.is_paused
                 self.notification_text = ""
             
-            # --- Timer Countdown, State Transitions, and Drawing logic ---
-            # (This part is also unchanged, copy it from your previous file)
             # 3. Update Timer Countdown
             if not self.is_paused:
                 write_register(device, 0x19, 100)
@@ -170,10 +214,12 @@ class FocusTimer:
                     self.current_state = self.BREAK_STATE
                     self.remaining_seconds = self.default_break_seconds
                     self.display_notification("Break Time!")
+                    self.audio_queue.put("START_BREAK")
                 else:
                     self.current_state = self.FOCUS_STATE
                     self.remaining_seconds = self.default_focus_seconds
                     self.display_notification("Focus Time!")
+                    self.audio_queue.put("START_FOCUS")
                 self.is_paused = False
             # 5. Draw Everything
             bg_color = self.FOCUS_BG if self.current_state == self.FOCUS_STATE else self.BREAK_BG
