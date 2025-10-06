@@ -153,7 +153,6 @@ class OllamaVoiceAssistant:
         import random
 
         # Add duck personality to the response
-        text = self.add_duck_personality(text)
 
         # Ensure quack noise is played only once before or after speaking
         play_quack_before = random.choice([True, False])
@@ -171,8 +170,8 @@ class OllamaVoiceAssistant:
             # Construct the piper command
             piper_command = [
                 "piper",
-                # "--model", "en_GB-northern_english_male-medium",
-                "--model", "en_GB-semaine-medium",
+                "--model", "en_GB-northern_english_male-medium",
+                # "--model", "en_GB-semaine-medium",
                 "--output-raw"
             ]
             # Use aplay to play the raw audio
@@ -255,13 +254,13 @@ class OllamaVoiceAssistant:
             self.speak("Quack quack, resuming the timer.")
             return True
 
-        if any(word in text for word in ['pause', 'hold on', 'stop the timer']):
+        if any(word in text for word in ['pause', 'hold on', 'stop the timer', 'stop timer']):
             self.command_queue.put('PAUSE')
             self.speak("Quack quack, timer paused.")
             return True
 
         # For saving
-        if any(word in text for word in ['save this time', 'remember this']):
+        if any(word in text for word in ['save this time', 'remember this', 'save time']):
             self.command_queue.put('SAVE')
             self.speak("Quack quack, I'll start with this time for the next session.")
             return True
@@ -272,16 +271,40 @@ class OllamaVoiceAssistant:
         """Process commands from sensors."""
         print(f"Assistant received sensor command: {command}")
         if command == "START_FOCUS":
-            self.speak("Quack quack! Focus time started. I'll keep you company while you work.")
+            focus_responses = [
+                "Quack quack! Focus time started. I'll keep you company while you work.",
+                "Quack quack! Time to focus! Let's get things done.",
+                "Quack quack! Focus mode activated! I'm here if you need me.",
+                "Quack quack! Let's dive into work! I'll be your trusty sidekick."
+            ]
+            self.speak(random.choice(focus_responses))
         if command == "START_BREAK":
-            self.speak("Quack quack! Focus time ended. Great job! Time for a break.")
+            breaks = [
+                "Quack quack! Time for a break! Let's relax.",
+                "Quack quack! Break time! How about a quick stretch?",
+                "Quack quack! You've earned a break! Maybe grab a snack?",
+                "Quack quack! It's break time! How about some fresh air?"
+            ]
+            self.speak(random.choice(breaks))
         if command == "REMIND_MOVE":
-            self.speak("Quack quack! Time to get up and stretch your wings! Take a real break away from the computer.")
+            reminders = [
+                "Quack quack! Time to stretch your wings!",
+                "Quack quack! Let's take a quick walk!",
+                "Quack quack! How about some light exercises?",
+                "Quack quack! Don't forget to move around a bit!"
+            ]
+            self.speak(random.choice(reminders))
         if command == "PET_DETECTED":
+            pet_responses = [
+                "Quack quack! Thanks for the petting!",
+                "Quack quack! I love when you pet me!",
+                "Quack quack! That feels nice!",
+                "Quack quack! You're the best human ever!"
+            ]
             if random.random() < 0.5:  # 50% chance to respond to petting
                 self.play_random_petting_noise()
             else:
-                self.speak("Quack quack! Thanks for the petting!")
+                self.speak(random.choice(pet_responses))
 
     def summarize_history(self):
         """Use the Ollama model to summarize earlier parts of the conversation."""
@@ -433,7 +456,7 @@ class OllamaVoiceAssistant:
                 # Send to Ollama for processing
                 print("Thinking...")
                 response = self.query_ollama(user_input, system_prompt)
-                
+                response = self.add_duck_personality(response)
                 # Speak the response
                 self.speak(response)
                 
