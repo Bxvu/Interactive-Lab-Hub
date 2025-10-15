@@ -1,5 +1,3 @@
-# add hat to encoder for visual info
-
 import math
 import random
 import time
@@ -16,10 +14,8 @@ from panda3d.bullet import BulletPlaneShape, BulletRigidBodyNode
 from panda3d.bullet import BulletSphereShape, BulletBoxShape
 from panda3d.bullet import BulletDebugNode
 
-# Import the mock sensors file
-# NOTE: WHEN RUNNING ON RASPBERRY PI WITH REAL HARDWARE,
-#       REPLACE THIS WITH YOUR ACTUAL HARDWARE IMPORTS.
-from sensors import initialize_mock_sensors 
+# Import the REAL sensors file
+from sensors import initialize_real_sensors 
 
 class BowlingGame(ShowBase):
     def __init__(self):
@@ -35,14 +31,21 @@ class BowlingGame(ShowBase):
         self.WIN = 3
         self.game_state = self.AIMING
         
-        # Sensor Initialization (using mocks for testing)
-        self.joystick, self.gesture, self.encoder_container = initialize_mock_sensors()
+        # Sensor Initialization (using real hardware imports from sensors.py)
+        # The return values match the objects used in your provided code
+        self.joystick, self.gesture, self.encoder_container = initialize_real_sensors()
 
         # Game properties
         self.throw_angle = 0  # Aiming angle controlled by encoder (in degrees)
         self.lane_position = 0 # Horizontal position controlled by joystick
         self.pins_fallen = 0
         self.pins = []
+        
+        # NEW: List to hold the preview dots
+        self.aim_previews = [] 
+
+        # New constant for movement speed
+        self.JOYSTICK_SENSITIVITY = 0.05 # Max change in position per update cycle
 
         # Start the game setup
         self.reset_game()
@@ -65,8 +68,8 @@ class BowlingGame(ShowBase):
 
         # Set camera position (overhead view of the lane)
         self.disable_mouse()
-        self.camera.setPos(0, -10, 8) 
-        self.camera.lookAt(0, 0, 5)
+        self.camera.setPos(0, -15, 10) # Moved back to Y=-15 and up to Z=10
+        self.camera.lookAt(0, 5, 0)    # Look further down the lane
         
         # Lighting
         alight = AmbientLight('alight')
@@ -84,42 +87,34 @@ class BowlingGame(ShowBase):
         self.world = BulletWorld()
         self.world.setGravity(Vec3(0, 0, -9.81)) # Standard gravity
 
-        # Debug overlay (optional, uncomment to see physics shapes)
+        # --- FIX: Enable Bullet Debug Node to show physics shapes ---
+        # We rely on the debug renderer to visualize the pin/ball/lane shapes as wireframes.
         debugNode = BulletDebugNode('Debug')
         debugNode.showWireframe(True)
-        debugNode.showBoundingBoxes(False)
-        debugNode.showNormals(False)
         debugRender = self.render.attachNewNode(debugNode)
         self.world.setDebugNode(debugRender.node())
+        # The user's necessary fix to show the debug render:
+        debugRender.show() 
+        # -----------------------------------------------------------
 
 
     def setup_lane(self):
         """Creates the 3D lane and walls."""
-        # 1. Lane (Ground Plane)
-        shape = BulletPlaneShape(Vec3(0, 0, 1), 0)
-        node = BulletRigidBodyNode('Ground')
-        node.addShape(shape)
-        np = self.render.attachNewNode(node)
-        np.setPos(0, 0, 0)
-        self.world.attachRigidBody(node)
-
-        # 2. Visual Plane (a simple flat surface)
-        # Note: Panda3D built-in models like 'models/plane' require the
-        # runtime environment to find them, which is usually fine if Panda3D 
-        # is installed correctly.
-        self.lane = self.loader.loadModel("models/environment")
-        self.lane.reparentTo(self.render)
-        self.lane.setScale(0.25, 0.25, 0.25)
-        self.lane.setPos(-8, 42, 0)
-        # self.lane.setScale(20, 40, 1)
-        # self.lane.setPos(0, 0, 0)
-        self.lane.setColor(0.5, 0.3, 0.1, 1) # Brown wood color
-
+        
+        # 1. Lane (Ground Plane Physics)
+        # Note: We use the plane shape for infinite, non-moving ground physics
+        ground_plane_shape = BulletPlaneShape(Vec3(0, 0, 1), 0)
+        ground_node = BulletRigidBodyNode('Ground')
+        ground_node.addShape(ground_plane_shape)
+        # Attach the ground plane to the render. This will appear as a grid line in debug mode.
+        self.render.attachNewNode(ground_node).setPos(0, 0, 0)
+        self.world.attachRigidBody(ground_node)
+        
         # 3. Simple Side Walls (long, thin boxes)
         wall_height, wall_thickness = 1, 0.5
         wall_length = 30
         
-        # Left Wall
+        # Left Wall Physics
         shape = BulletBoxShape(Vec3(wall_thickness, wall_length, wall_height))
         node = BulletRigidBodyNode('LeftWall')
         node.addShape(shape)
@@ -128,7 +123,7 @@ class BowlingGame(ShowBase):
         self.world.attachRigidBody(node)
         np.setColor(0.4, 0.4, 0.4, 1)
 
-        # Right Wall
+        # Right Wall Physics
         shape = BulletBoxShape(Vec3(wall_thickness, wall_length, wall_height))
         node = BulletRigidBodyNode('RightWall')
         node.addShape(shape)
@@ -148,7 +143,8 @@ class BowlingGame(ShowBase):
             (-1.5, 23), (-0.5, 23), (0.5, 23), (1.5, 23) # Row 4 (4 pins)
         ]
         
-        pin_size = Vec3(0.1, 0.1, 0.5) # Thin box for simplicity
+        # Pin is now a vertically stretched rectangle (box) as requested
+        pin_size = Vec3(0.1, 0.1, 0.5) 
         
         for i, (x, y) in enumerate(pin_row_config):
             pin_shape = BulletBoxShape(pin_size)
@@ -156,7 +152,7 @@ class BowlingGame(ShowBase):
             pin_node.setMass(0.5) # Pins are light
             pin_node.addShape(pin_shape)
             pin_np = self.render.attachNewNode(pin_node)
-            pin_np.setPos(x, y, pin_size.z / 2) # Place on ground
+            pin_np.setPos(x, y, pin_size.z) # Place on ground (Z position must be pin height/2)
             pin_np.setColor(1, 1, 1, 1) # White pins
             self.world.attachRigidBody(pin_node)
             self.pins.append(pin_np)
@@ -173,19 +169,18 @@ class BowlingGame(ShowBase):
         if hasattr(self, 'ball_np'):
             self.ball_np.removeNode()
 
-        # Physics Node
+        # Physics Node (Sphere as requested)
         ball_shape = BulletSphereShape(ball_radius)
         ball_node = BulletRigidBodyNode('Ball')
         ball_node.setMass(5.0) # Ball is heavy
         ball_node.addShape(ball_shape)
         
-        # Visual Node
+        # Visual Node (NodePath attached directly to the render)
         self.ball_np = self.render.attachNewNode(ball_node)
-        # Note: 'models/sphere' is a default Panda3D model
-        self.ball_model = self.loader.loadModel("models/misc/sphere") 
-        self.ball_model.reparentTo(self.ball_np)
-        self.ball_model.setScale(ball_radius)
-        self.ball_np.setColor(0, 0, 0, 1) # Black ball
+        
+        # Set scale and color. The Debug Node will draw the sphere shape.
+        self.ball_np.setScale(ball_radius)
+        self.ball_np.setColor(0.1, 0.1, 0.1, 1) # Dark color for bowling ball
         
         self.world.attachRigidBody(ball_node)
         
@@ -193,20 +188,94 @@ class BowlingGame(ShowBase):
         self.ball_np.setPos(self.lane_position, -8, ball_radius) # Start far back
 
 
+    def draw_aim_preview(self):
+        """Draws temporary spheres ahead of the ball indicating the throw angle."""
+        
+        # Cleanup any existing previews
+        for preview in self.aim_previews:
+            preview.removeNode()
+        self.aim_previews = []
+        
+        if self.game_state != self.AIMING:
+            return
+
+        # Starting position of the ball
+        start_pos = self.ball_np.getPos()
+        
+        # Convert angle to radians
+        angle_rad = math.radians(self.throw_angle)
+        
+        # Vector components for movement (normalized path direction)
+        dx = math.sin(angle_rad)
+        dy = math.cos(angle_rad)
+
+        # Preview dot properties
+        preview_radius = 0.1
+        preview_color = (1, 1, 0, 0.5) # Yellowish with low alpha (transparency not easy with debug mode)
+        preview_distance = 3.0 # Distance between preview dots
+        
+        for i in range(1, 6): # Draw 5 preview dots
+            # Calculate next position along the projected path
+            x_offset = dx * preview_distance * i
+            y_offset = dy * preview_distance * i
+            
+            preview_pos = start_pos + Vec3(x_offset, y_offset, 0)
+            
+            # Create a simple box/sphere visual (using a small Box for simplicity)
+            preview_shape = BulletBoxShape(Vec3(preview_radius, preview_radius, preview_radius))
+            preview_node = BulletRigidBodyNode('Preview')
+            preview_node.addShape(preview_shape)
+            
+            preview_np = self.render.attachNewNode(preview_node)
+            preview_np.setPos(preview_pos)
+            preview_np.setColor(*preview_color)
+            
+            # Make the preview non-collidable and fixed in space (not part of the physics)
+            preview_node.setKinematic(True)
+            
+            self.aim_previews.append(preview_np)
+
+
     def update_sensors(self, task):
-        """Reads and maps sensor data to game variables."""
+        """
+        Reads and maps REAL sensor data to game variables.
+        
+        The objects self.joystick, self.gesture, and self.encoder_container 
+        are now the live hardware objects from sensors.py.
+        """
+        
         # 1. Joystick for Left/Right Positioning (X-axis)
         joystick_val = self.joystick.horizontal
-        # Map joystick range (0-1023) to lane position range (-1.5 to 1.5)
-        self.lane_position = ((joystick_val / 1023.0) * 3.0) - 1.5
+        
+        # NEW LOGIC: Joystick controls the CHANGE in position (velocity/delta)
+        center_val = 512.0
+        dead_zone = 50 
+        
+        difference = joystick_val - center_val
+        
+        # Calculate movement delta
+        if abs(difference) < dead_zone:
+            normalized_delta = 0.0
+        else:
+            # Normalize the difference to a value between -1.0 and 1.0 (for max movement)
+            normalized_delta = difference / (512.0 - dead_zone) 
+        
+        # Apply the delta to the current position
+        self.lane_position += normalized_delta * self.JOYSTICK_SENSITIVITY
+        
+        # Clamp the position to ensure the ball stays within the lane bounds (-1.5 to 1.5)
+        self.lane_position = max(-1.5, min(1.5, self.lane_position))
+
         
         # 2. Rotary Encoder for Aiming Angle (Z-rotation)
-        encoder_pos = self.encoder_container.encoder.update()
+        # Uses the EncoderContainer update method to get the current position
+        encoder_pos = self.encoder_container.update()
         # Map encoder position to an angle (-20 to +20 degrees)
         self.throw_angle = encoder_pos * 2.0 # 1 unit of turn = 2 degrees of angle
         self.throw_angle = max(-20, min(20, self.throw_angle)) # Clamp angle
         
         # 3. Gesture Sensor for Throw Action (UP = 0x01)
+        # Uses the APDS9960 object directly
         gesture = self.gesture.gesture()
         if gesture == 0x01 and self.game_state == self.AIMING:
             self.throw_ball()
@@ -225,6 +294,7 @@ class BowlingGame(ShowBase):
             self.ball_np.setPos(self.lane_position, -8, ball_radius)
             self.ball_np.setHpr(self.throw_angle, 0, 0) # Rotate for aiming visual
             self.update_aim_display()
+            self.draw_aim_preview() # NEW: Draw the aim preview path
             
         elif self.game_state == self.THROWN:
             # Check if ball has moved far down the lane (arbitrary point)
@@ -260,10 +330,11 @@ class BowlingGame(ShowBase):
         ball_body = self.ball_np.node()
         ball_body.setLinearVelocity(Vec3(vx, vy, 0))
         
-        # Hide aim indicators
+        # Hide aim indicators and preview dots
         self.aim_text.destroy()
+        self.clear_previews() # NEW: Clear preview dots
 
-    
+
     def check_pins(self):
         """Checks how many pins have fallen and determines game over."""
         pins_knocked = 0
@@ -279,31 +350,83 @@ class BowlingGame(ShowBase):
         if self.pins_fallen >= 10:
             self.show_win_screen()
         else:
-            # For simplicity, if not all pins fell, we reset immediately for the next throw
-            self.reset_game()
+            # --- MODIFICATION: If not a strike, allow another throw at remaining pins ---
+            # Wait 5 seconds to view the pin positions, then reset ONLY the ball.
+            self.taskMgr.doMethodLater(5.0, self.reset_ball_only, "ResetBallForNextThrow")
+            self.game_state = self.SCORING 
+            
+    # --- NEW METHOD: Clears all preview spheres ---
+    def clear_previews(self):
+        for preview in self.aim_previews:
+            preview.removeNode()
+        self.aim_previews = []
+
+    # --- NEW METHOD: Resets only the ball and returns to AIMING state ---
+    def reset_ball_only(self, task=None):
+        """Resets the bowling ball and returns the game to the aiming state."""
+        
+        # 1. Clean up old ball (both physics and visual node)
+        if hasattr(self, 'ball_np'):
+             self.world.removeRigidBody(self.ball_np.node())
+             self.ball_np.removeNode()
+
+        # 2. Reset position and recreate ball
+        self.lane_position = 0 # Reset lane position to center for new throw
+        self.setup_ball()
+        
+        # 3. Reset state
+        self.game_state = self.AIMING
+        self.throw_angle = 0
+        
+        # Reset encoder to zero (important for aiming on next throw)
+        if hasattr(self.encoder_container.encoder, 'position'):
+             self.encoder_container.encoder.position = 0
+        self.encoder_container.last_position = 0 
+        
+        # Ensure aim display updates immediately
+        if hasattr(self, 'aim_text'): 
+            self.aim_text.destroy()
+            
+        # Ensure previews are clear
+        self.clear_previews() 
+            
+        return Task.done
 
 
     def reset_game(self):
-        """Resets the scene for a new throw or a new game."""
-        # Clean up old pins and ball
-        for pin in self.pins:
-            pin.removeNode()
-        self.pins = []
+        """Resets the entire scene (full game reset: pins, ball, and score)."""
         
+        # --- FIX: Correctly remove physics bodies for old pins ---
+        for pin in self.pins:
+            self.world.removeRigidBody(pin.node())
+            pin.removeNode()
+        
+        # Clean up ball and text
         if hasattr(self, 'ball_np'):
+             self.world.removeRigidBody(self.ball_np.node())
              self.ball_np.removeNode()
 
         if hasattr(self, 'win_text'):
             self.win_text.destroy()
             
+        self.pins = []
+        
         self.setup_lane()
         self.setup_pins()
+        self.lane_position = 0 # Reset lane position to center for new game
         self.setup_ball()
         self.game_state = self.AIMING
         self.throw_angle = 0
-        self.joystick._x = 512 # Reset mock joystick state
-        self.encoder_container.encoder.position = 0
+        
+        # Reset encoder to zero
+        if hasattr(self.encoder_container.encoder, 'position'):
+             self.encoder_container.encoder.position = 0
+        self.encoder_container.last_position = 0 
+        
         self.pins_fallen = 0
+        # Ensure any pending reset task is cleared if we are resetting manually
+        self.taskMgr.remove("GameResetAfterThrow")
+        self.clear_previews()
 
 
     def update_score_display(self):
@@ -326,10 +449,12 @@ class BowlingGame(ShowBase):
         if hasattr(self, 'aim_text'):
             self.aim_text.destroy()
 
-        aim_pos = ((self.joystick.horizontal / 1023.0) * 0.8) - 0.4
+        # We must read the joystick value again here to show it live
+        joystick_val = self.joystick.horizontal
+        aim_pos_display = self.lane_position # Use the actual lane_position variable for display
         
         self.aim_text = OnscreenText(
-            text=f"Aim Angle: {self.throw_angle:.1f} deg\nPos: {aim_pos:.2f} (Joystick/Encoder)\nSwipe UP to Throw!",
+            text=f"Aim Angle: {self.throw_angle:.1f} deg (Encoder)\nPos: {aim_pos_display:.2f} (Joystick)\nSwipe UP to Throw!",
             pos=(0.0, -0.8),
             scale=0.06,
             fg=(1, 1, 0, 1),
