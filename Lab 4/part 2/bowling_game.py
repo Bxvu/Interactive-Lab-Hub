@@ -41,8 +41,7 @@ class BowlingGame(ShowBase):
         self.pins_fallen = 0
         self.pins = []
         
-        # NEW: List to hold the preview dots
-        self.aim_previews = [] 
+        # REMOVED: self.aim_previews list and associated logic
 
         # New constant for movement speed
         self.JOYSTICK_SENSITIVITY = 0.05 # Max change in position per update cycle
@@ -68,8 +67,8 @@ class BowlingGame(ShowBase):
 
         # Set camera position (overhead view of the lane)
         self.disable_mouse()
-        self.camera.setPos(0, -15, 10) # Moved back to Y=-15 and up to Z=10
-        self.camera.lookAt(0, 5, 0)    # Look further down the lane
+        self.camera.setPos(0, -20, 5) # Moved back to Y=-15 and up to Z=10
+        self.camera.lookAt(0, 2, 0)    # Look further down the lane
         
         # Lighting
         alight = AmbientLight('alight')
@@ -162,7 +161,7 @@ class BowlingGame(ShowBase):
 
     def setup_ball(self):
         """Creates the bowling ball."""
-        ball_radius = 0.3
+        ball_radius = 0.5
         self.ball_thrown = False
         
         # Check if ball already exists
@@ -188,52 +187,6 @@ class BowlingGame(ShowBase):
         self.ball_np.setPos(self.lane_position, -8, ball_radius) # Start far back
 
 
-    def draw_aim_preview(self):
-        """Draws temporary spheres ahead of the ball indicating the throw angle."""
-        
-        # Cleanup any existing previews
-        for preview in self.aim_previews:
-            preview.removeNode()
-        self.aim_previews = []
-        
-        if self.game_state != self.AIMING:
-            return
-
-        # Starting position of the ball
-        start_pos = self.ball_np.getPos()
-        
-        # Convert angle to radians
-        angle_rad = math.radians(self.throw_angle)
-        
-        # Vector components for movement (normalized path direction)
-        dx = math.sin(angle_rad)
-        dy = math.cos(angle_rad)
-
-        # Preview dot properties
-        preview_radius = 0.1
-        preview_color = (1, 1, 0, 0.5) # Yellowish with low alpha (transparency not easy with debug mode)
-        preview_distance = 3.0 # Distance between preview dots
-        
-        for i in range(1, 6): # Draw 5 preview dots
-            # Calculate next position along the projected path
-            x_offset = dx * preview_distance * i
-            y_offset = dy * preview_distance * i
-            
-            preview_pos = start_pos + Vec3(x_offset, y_offset, 0)
-            
-            # Create a simple box/sphere visual (using a small Box for simplicity)
-            preview_shape = BulletBoxShape(Vec3(preview_radius, preview_radius, preview_radius))
-            preview_node = BulletRigidBodyNode('Preview')
-            preview_node.addShape(preview_shape)
-            
-            preview_np = self.render.attachNewNode(preview_node)
-            preview_np.setPos(preview_pos)
-            preview_np.setColor(*preview_color)
-            
-            # Make the preview non-collidable and fixed in space (not part of the physics)
-            preview_node.setKinematic(True)
-            
-            self.aim_previews.append(preview_np)
 
 
     def update_sensors(self, task):
@@ -290,11 +243,13 @@ class BowlingGame(ShowBase):
 
         if self.game_state == self.AIMING:
             # Update ball position and rotation based on sensors
-            ball_radius = 0.3
-            self.ball_np.setPos(self.lane_position, -8, ball_radius)
-            self.ball_np.setHpr(self.throw_angle, 0, 0) # Rotate for aiming visual
+            ball_radius = 0.5
+            # This is the line that makes the sphere follow the joystick position
+            self.ball_np.setPos(self.lane_position, -8, ball_radius) 
+            # This is the line that makes the sphere show the aiming angle
+            self.ball_np.setHpr(self.throw_angle, 0, 0) 
+            
             self.update_aim_display()
-            self.draw_aim_preview() # NEW: Draw the aim preview path
             
         elif self.game_state == self.THROWN:
             # Check if ball has moved far down the lane (arbitrary point)
@@ -319,20 +274,20 @@ class BowlingGame(ShowBase):
 
         # Calculate force vector (constant speed, angle from encoder)
         speed = 20.0 # Constant forward speed
-        angle_rad = math.radians(self.throw_angle)
+        angle_rad = -math.radians(self.throw_angle)
         
         # X-velocity is based on the sine of the angle
         vx = speed * math.sin(angle_rad)
         # Y-velocity (forward) is based on the cosine of the angle
         vy = speed * math.cos(angle_rad)
         
-        # Apply impulse to the physics body
+        # Apply impulse to the physics body of the SAME sphere object
         ball_body = self.ball_np.node()
         ball_body.setLinearVelocity(Vec3(vx, vy, 0))
         
-        # Hide aim indicators and preview dots
+        # Hide aim indicators
         self.aim_text.destroy()
-        self.clear_previews() # NEW: Clear preview dots
+        # REMOVED: self.clear_previews() 
 
 
     def check_pins(self):
@@ -351,16 +306,12 @@ class BowlingGame(ShowBase):
             self.show_win_screen()
         else:
             # --- MODIFICATION: If not a strike, allow another throw at remaining pins ---
-            # Wait 5 seconds to view the pin positions, then reset ONLY the ball.
-            self.taskMgr.doMethodLater(5.0, self.reset_ball_only, "ResetBallForNextThrow")
+            # Wait 2 seconds to view the pin positions, then reset ONLY the ball.
+            self.taskMgr.doMethodLater(0.1, self.reset_ball_only, "ResetBallForNextThrow")
             self.game_state = self.SCORING 
             
-    # --- NEW METHOD: Clears all preview spheres ---
-    def clear_previews(self):
-        for preview in self.aim_previews:
-            preview.removeNode()
-        self.aim_previews = []
-
+    # REMOVED: clear_previews() method
+            
     # --- NEW METHOD: Resets only the ball and returns to AIMING state ---
     def reset_ball_only(self, task=None):
         """Resets the bowling ball and returns the game to the aiming state."""
@@ -387,13 +338,10 @@ class BowlingGame(ShowBase):
         if hasattr(self, 'aim_text'): 
             self.aim_text.destroy()
             
-        # Ensure previews are clear
-        self.clear_previews() 
-            
         return Task.done
 
 
-    def reset_game(self):
+    def reset_game(self, task=None):
         """Resets the entire scene (full game reset: pins, ball, and score)."""
         
         # --- FIX: Correctly remove physics bodies for old pins ---
@@ -426,7 +374,6 @@ class BowlingGame(ShowBase):
         self.pins_fallen = 0
         # Ensure any pending reset task is cleared if we are resetting manually
         self.taskMgr.remove("GameResetAfterThrow")
-        self.clear_previews()
 
 
     def update_score_display(self):
