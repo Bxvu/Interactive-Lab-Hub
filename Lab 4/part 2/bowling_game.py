@@ -1,6 +1,7 @@
 import math
 import random
 import time
+import sys # Added for cleanup
 
 from direct.showbase.ShowBase import ShowBase
 # Added CardMaker and LPoint3 for custom geometry
@@ -14,8 +15,8 @@ from panda3d.bullet import BulletPlaneShape, BulletRigidBodyNode
 from panda3d.bullet import BulletSphereShape, BulletBoxShape
 from panda3d.bullet import BulletDebugNode # Kept for potential use, but disabled
 
-# Import the REAL sensors file
-from sensors import initialize_real_sensors 
+# Import the REAL sensors file and constants
+from sensors import initialize_real_sensors, GESTURE_UP 
 
 class BowlingGame(ShowBase):
     def __init__(self):
@@ -32,8 +33,8 @@ class BowlingGame(ShowBase):
         self.game_state = self.AIMING
         
         # Sensor Initialization (using real hardware imports from sensors.py)
-        # The return values match the objects used in your provided code
-        self.joystick, self.gesture, self.encoder_container = initialize_real_sensors()
+        # FIX: Now returns the shared state object and the thread manager
+        self.hardware_state, self.sensor_thread, self.encoder_container = initialize_real_sensors()
 
         # Game properties
         self.throw_angle = 0  # Aiming angle controlled by encoder (in degrees)
@@ -50,7 +51,19 @@ class BowlingGame(ShowBase):
         # Add the main game loop tasks
         self.taskMgr.add(self.update_game, "updateGameTask")
         self.taskMgr.add(self.update_sensors, "updateSensorTask")
+        
+        # Add a cleanup hook to stop the sensor thread on exit
+        self.exitFunc = self.cleanup_game
 
+
+    def cleanup_game(self):
+        """Called when the game window is closed to safely shut down the sensor thread."""
+        print("Cleaning up threads and exiting...")
+        if self.sensor_thread and self.sensor_thread.is_alive():
+            self.hardware_state.running = False
+            self.sensor_thread.join(timeout=2.0) # Wait for thread to finish
+        sys.exit(0)
+    
     # ----------------------------------------------------------------------
     # NEW: Custom Geometry Helper
     # ----------------------------------------------------------------------
@@ -308,11 +321,12 @@ class BowlingGame(ShowBase):
 
     def update_sensors(self, task):
         """
-        Reads and maps REAL sensor data to game variables.
+        Reads and maps REAL sensor data from the non-blocking hardware state object.
         """
         
         # 1. Joystick for Left/Right Positioning (X-axis)
-        joystick_val = self.joystick.horizontal
+        # Read from shared state (Non-blocking)
+        joystick_val = self.hardware_state.joystick_x
         
         # NEW LOGIC: Joystick controls the CHANGE in position (velocity/delta)
         center_val = 512.0
@@ -335,18 +349,23 @@ class BowlingGame(ShowBase):
 
         
         # 2. Rotary Encoder for Aiming Angle (Z-rotation)
-        encoder_pos = self.encoder_container.update()
+        # Read from shared state (Non-blocking)
+        encoder_pos = self.hardware_state.encoder_pos
         
         # --- FIX: Invert the angle mapping to correct mirroring ---
-        self.throw_angle = encoder_pos * 2.0 # Invert direction
+        self.throw_angle = encoder_pos * -2.0 # Invert direction
         
         # Map encoder position to an angle (-20 to +20 degrees)
-        self.throw_angle = -max(-20, min(20, self.throw_angle)) # Clamp angle
+        self.throw_angle = max(-20, min(20, self.throw_angle)) # Clamp angle
         
         # 3. Gesture Sensor for Throw Action (UP = 0x01)
-        gesture = self.gesture.gesture()
-        if gesture == 0x01 and self.game_state == self.AIMING:
+        # Read from shared state (Non-blocking)
+        gesture = self.hardware_state.gesture
+        
+        if gesture == GESTURE_UP and self.game_state == self.AIMING:
             self.throw_ball()
+            # Reset gesture state immediately after use
+            self.hardware_state.gesture = 0 
 
         return Task.cont
 
@@ -423,7 +442,7 @@ class BowlingGame(ShowBase):
         self.pins_fallen = pins_knocked
         self.update_score_display()
 
-        if self.pins_fallen >= 10:
+        if self.pins_fallen >= 1:
             self.show_win_screen()
         else:
             # --- MODIFICATION: If not a strike, allow another throw at remaining pins ---
@@ -449,14 +468,17 @@ class BowlingGame(ShowBase):
         self.game_state = self.AIMING
         self.throw_angle = 0
         
-        # Reset encoder to zero (important for aiming on next throw)
+        # Reset encoder position in the container and the hardware state
         if hasattr(self.encoder_container.encoder, 'position'):
              self.encoder_container.encoder.position = 0
         self.encoder_container.last_position = 0 
+        self.hardware_state.encoder_pos = 0 # Important: reset the shared state too!
         
         # Ensure aim display updates immediately
         if hasattr(self, 'aim_text'): 
             self.aim_text.destroy()
+
+        self.hardware_state.win_flag = False
             
         return Task.done
 
@@ -486,12 +508,15 @@ class BowlingGame(ShowBase):
         self.game_state = self.AIMING
         self.throw_angle = 0
         
-        # Reset encoder to zero
+        # Reset encoder position in the container and the hardware state
         if hasattr(self.encoder_container.encoder, 'position'):
              self.encoder_container.encoder.position = 0
         self.encoder_container.last_position = 0 
+        self.hardware_state.encoder_pos = 0 # Important: reset the shared state too!
         
         self.pins_fallen = 0
+
+        self.hardware_state.win_flag = False
         # Ensure any pending reset task is cleared if we are resetting manually
         self.taskMgr.remove("GameResetAfterThrow")
 
@@ -517,8 +542,8 @@ class BowlingGame(ShowBase):
             self.aim_text.destroy()
 
         # We must read the joystick value again here to show it live
-        joystick_val = self.joystick.horizontal
-        aim_pos_display = self.lane_position # Use the actual lane_position variable for display
+        # Use the shared state for display
+        aim_pos_display = self.lane_position 
         
         self.aim_text = OnscreenText(
             text=f"Aim Angle: {self.throw_angle:.1f} deg (Encoder)\nPos: {aim_pos_display:.2f} (Joystick)\nSwipe UP to Throw!",
@@ -533,6 +558,11 @@ class BowlingGame(ShowBase):
     def show_win_screen(self):
         """Displays the win message."""
         self.game_state = self.WIN
+        
+        # --- NEW: Set win flag in background thread state ---
+        self.hardware_state.win_flag = True
+        # ----------------------------------------------------
+        
         self.win_text = OnscreenText(
             text="YOU WIN! All Pins Knocked Down!",
             pos=(0.0, 0.0),
