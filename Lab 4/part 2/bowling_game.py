@@ -155,7 +155,7 @@ class BowlingGame(ShowBase):
         self.background = self.loader.loadModel("models/environment")
         self.background.reparentTo(self.render)
         self.background.setScale(0.25, 0.75, 0.25)
-        self.background.setPos(-8, 120, 0)
+        self.background.setPos(-8, 120, -0.1)
 
         # test box creation
         test_box = self.create_box_visual(color=(1, 0, 0, 1))
