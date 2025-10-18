@@ -3,8 +3,8 @@ import random
 import time
 
 from direct.showbase.ShowBase import ShowBase
-# Added WindowProperties to the import list
-from panda3d.core import Vec3, AmbientLight, DirectionalLight, TextNode, LColor, WindowProperties 
+# Added CardMaker and LPoint3 for custom geometry
+from panda3d.core import Vec3, AmbientLight, DirectionalLight, TextNode, LColor, WindowProperties, CardMaker, LPoint3, NodePath
 from direct.gui.OnscreenText import OnscreenText
 from direct.task import Task
 from direct.actor.Actor import Actor
@@ -12,7 +12,7 @@ from direct.actor.Actor import Actor
 from panda3d.bullet import BulletWorld
 from panda3d.bullet import BulletPlaneShape, BulletRigidBodyNode
 from panda3d.bullet import BulletSphereShape, BulletBoxShape
-from panda3d.bullet import BulletDebugNode
+from panda3d.bullet import BulletDebugNode # Kept for potential use, but disabled
 
 # Import the REAL sensors file
 from sensors import initialize_real_sensors 
@@ -41,8 +41,6 @@ class BowlingGame(ShowBase):
         self.pins_fallen = 0
         self.pins = []
         
-        # REMOVED: self.aim_previews list and associated logic
-
         # New constant for movement speed
         self.JOYSTICK_SENSITIVITY = 0.05 # Max change in position per update cycle
 
@@ -53,22 +51,77 @@ class BowlingGame(ShowBase):
         self.taskMgr.add(self.update_game, "updateGameTask")
         self.taskMgr.add(self.update_sensors, "updateSensorTask")
 
+    # ----------------------------------------------------------------------
+    # NEW: Custom Geometry Helper
+    # ----------------------------------------------------------------------
+    def create_box_visual(self, color=(1, 1, 1, 1)):
+        """
+        Creates a visible 6-sided cube using CardMaker planes.
+        Returns a NodePath that acts as the visual root for the box.
+        The resulting object has an origin point at its geometric center.
+        """
+        box_root = NodePath('box-root')
+        cm = CardMaker('face')
+        
+        # Define the half-size for convenience (since we will scale it later)
+        s = 0.5 
+        
+        # Faces: Define the 6 planes that make up the cube
+        
+        # Top (+Z) Face
+        cm.setFrame(-s, s, -s, s)
+        top = box_root.attachNewNode(cm.generate())
+        top.setPos(0, -s, 0)
+        
+        # # Bottom (-Z) Face
+        bottom = box_root.attachNewNode(cm.generate())
+        bottom.setPos(0, s, 0)
+        bottom.setHpr(0, 180, 0)
+        
+        # Front (+Y) Face
+        cm.setFrame(-s, s, -s, s)
+        front = box_root.attachNewNode(cm.generate())
+        front.setPos(0, 0, s)
+        front.setP(-90)
+        
+        # # Back (-Y) Face
+        back = box_root.attachNewNode(cm.generate())
+        back.setPos(0, 0, -s)
+        back.setP(90)
+        
+        # Right (+X) Face
+        cm.setFrame(-s, s, -s, s)
+        right = box_root.attachNewNode(cm.generate())
+        right.setPos(s, 0, 0)
+        right.setH(90)
+        # right.setP(-90)
+
+        # Left (-X) Face
+        left = box_root.attachNewNode(cm.generate())
+        left.setPos(-s, 0, 0)
+        left.setH(-90)
+        # left.setP(-90)
+
+        # Set color on the root node
+        box_root.setColor(*color)
+        
+        return box_root
+    # ----------------------------------------------------------------------
 
     def setup_scene(self):
         """Configures the camera, lighting, and physics world."""
         
-        # --- FIX: Robust way to set window size using WindowProperties ---
+        # Set window size
         props = WindowProperties()
-        props.setSize(1280, 720) # Request 720p resolution
+        props.setSize(1280, 720) 
         self.win.requestProperties(props)
-        # -------------------------------------------------------------------
         
         self.set_background_color(0.2, 0.2, 0.2)
 
         # Set camera position (overhead view of the lane)
         self.disable_mouse()
-        self.camera.setPos(0, -20, 5) # Moved back to Y=-15 and up to Z=10
-        self.camera.lookAt(0, 2, 0)    # Look further down the lane
+        self.camera.setPos(0, -20, 5) 
+        self.camera.lookAt(0, 2, 0)    
         
         # Lighting
         alight = AmbientLight('alight')
@@ -84,52 +137,108 @@ class BowlingGame(ShowBase):
 
         # Physics World Setup
         self.world = BulletWorld()
-        self.world.setGravity(Vec3(0, 0, -9.81)) # Standard gravity
+        self.world.setGravity(Vec3(0, 0, -9.81)) 
 
-        # --- FIX: Enable Bullet Debug Node to show physics shapes ---
-        # We rely on the debug renderer to visualize the pin/ball/lane shapes as wireframes.
+        self.background = self.loader.loadModel("models/environment")
+        self.background.reparentTo(self.render)
+        self.background.setScale(0.25, 0.75, 0.25)
+        self.background.setPos(-8, 120, 0)
+
+        # test box creation
+        test_box = self.create_box_visual(color=(1, 0, 0, 1))
+        test_box.setScale(1, 1, 1)
+        test_box.setPos(-5, 0, 2)
+        test_box.reparentTo(self.render)
+        # keep a reference and start a rotation task so you can inspect every face
+        self.test_box = test_box
+        self.taskMgr.add(self.rotate_test_box, "rotateTestBoxTask")
+
+
+        # --- IMPORTANT: Debug visuals enabled for hitbox visibility ---
         debugNode = BulletDebugNode('Debug')
         debugNode.showWireframe(True)
         debugRender = self.render.attachNewNode(debugNode)
         self.world.setDebugNode(debugRender.node())
-        # The user's necessary fix to show the debug render:
         debugRender.show() 
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------------
 
+    def rotate_test_box(self, task):
+        """Rotate the test box through all angles for visual inspection."""
+        # task.time gives elapsed seconds since the task started; use it to compute HPR
+        t = task.time
+        heading = (t * 45) % 360   # 45 deg/sec
+        pitch   = (t * 30) % 360   # 30 deg/sec
+        roll    = (t * 15) % 360   # 15 deg/sec
+        # apply the combined rotation
+        if hasattr(self, 'test_box') and not self.test_box.isEmpty():
+            self.test_box.setHpr(heading, pitch, roll)
+        return Task.cont
 
     def setup_lane(self):
         """Creates the 3D lane and walls."""
         
+        # LANE DIMENSIONS
+        lane_width = 4.0
+        lane_length = 40.0 # From Y=-10 to Y=30
+        wall_thickness = 0.5
+        wall_height = 1.0
+        wall_length = 35.0 # From Y=-10 to Y=25 (Covers play area)
+        
+        # WALL PLACEMENT CALCULATIONS
+        wall_center_y = (-10.0 + 25.0) / 2.0  # Center of the 35-unit long wall area (Y=7.5)
+        wall_x_pos = (lane_width / 2.0) + (wall_thickness / 2.0) # 2.0 + 0.25 = 2.25
+
+        
         # 1. Lane (Ground Plane Physics)
-        # Note: We use the plane shape for infinite, non-moving ground physics
         ground_plane_shape = BulletPlaneShape(Vec3(0, 0, 1), 0)
         ground_node = BulletRigidBodyNode('Ground')
         ground_node.addShape(ground_plane_shape)
-        # Attach the ground plane to the render. This will appear as a grid line in debug mode.
-        self.render.attachNewNode(ground_node).setPos(0, 0, 0)
+        
+        ground_np = self.render.attachNewNode(ground_node)
         self.world.attachRigidBody(ground_node)
+
+        # 2. Visual Lane (CardMaker for a textured quad)
+        cm = CardMaker('lane_card')
+        cm.setFrame(-lane_width / 2, lane_width / 2, 0, lane_length) 
+        lane_visual = self.render.attachNewNode(cm.generate())
         
-        # 3. Simple Side Walls (long, thin boxes)
-        wall_height, wall_thickness = 1, 0.5
-        wall_length = 30
+        lane_visual.setP(-90)
+        lane_visual.setPos(0, -10, 0.0)
+        lane_visual.setColor(0.6, 0.4, 0.2, 1)
+
+        # 3. Side Walls
         
-        # Left Wall Physics
-        shape = BulletBoxShape(Vec3(wall_thickness, wall_length, wall_height))
+        # Physics shape uses half dimensions
+        wall_shape_half = Vec3(wall_thickness/2, wall_length/2, wall_height/2) 
+        wall_visual_scale = (wall_thickness, wall_length, wall_height)
+
+        # Left Wall
+        # NEW VISUAL: Custom CardMaker Box
+        left_visual = self.create_box_visual(color=(0.4, 0.4, 0.4, 1))
+        left_visual.setScale(*wall_visual_scale) 
+        
+        shape = BulletBoxShape(wall_shape_half)
         node = BulletRigidBodyNode('LeftWall')
         node.addShape(shape)
-        np = self.render.attachNewNode(node)
-        np.setPos(-2.5, wall_length / 2, wall_height) # Positioned to leave a lane width
+        np_left = self.render.attachNewNode(node)
+        left_visual.reparentTo(np_left)
+        # Position NodePath (Physics Center)
+        np_left.setPos(-wall_x_pos, wall_center_y, wall_height / 2) 
         self.world.attachRigidBody(node)
-        np.setColor(0.4, 0.4, 0.4, 1)
 
-        # Right Wall Physics
-        shape = BulletBoxShape(Vec3(wall_thickness, wall_length, wall_height))
+        # Right Wall
+        # NEW VISUAL: Custom CardMaker Box
+        right_visual = self.create_box_visual(color=(0.4, 0.4, 0.4, 1))
+        right_visual.setScale(*wall_visual_scale)
+        
+        shape = BulletBoxShape(wall_shape_half)
         node = BulletRigidBodyNode('RightWall')
         node.addShape(shape)
-        np = self.render.attachNewNode(node)
-        np.setPos(2.5, wall_length / 2, wall_height)
+        np_right = self.render.attachNewNode(node)
+        right_visual.reparentTo(np_right)
+        # Position NodePath (Physics Center)
+        np_right.setPos(wall_x_pos, wall_center_y, wall_height / 2)
         self.world.attachRigidBody(node)
-        np.setColor(0.4, 0.4, 0.4, 1)
 
 
     def setup_pins(self):
@@ -142,17 +251,25 @@ class BowlingGame(ShowBase):
             (-1.5, 23), (-0.5, 23), (0.5, 23), (1.5, 23) # Row 4 (4 pins)
         ]
         
-        # Pin is now a vertically stretched rectangle (box) as requested
-        pin_size = Vec3(0.1, 0.1, 0.5) 
+        # Pin is a vertically stretched rectangle (box)
+        pin_half_size = Vec3(0.1 / 2, 0.1 / 2, 0.5 / 2)
+        pin_visual_scale = (0.1, 0.1, 0.5)
         
         for i, (x, y) in enumerate(pin_row_config):
-            pin_shape = BulletBoxShape(pin_size)
+            # 1. Physics setup (Bullet Box)
+            pin_shape = BulletBoxShape(pin_half_size)
             pin_node = BulletRigidBodyNode(f'Pin-{i}')
-            pin_node.setMass(0.5) # Pins are light
+            pin_node.setMass(0.5) 
             pin_node.addShape(pin_shape)
+            
+            # 2. NEW Visual setup (Custom CardMaker Box)
+            pin_visual = self.create_box_visual(color=(1, 1, 1, 1)) # White
+            pin_visual.setScale(*pin_visual_scale)
+            
+            # 3. Attach and position
             pin_np = self.render.attachNewNode(pin_node)
-            pin_np.setPos(x, y, pin_size.z) # Place on ground (Z position must be pin height/2)
-            pin_np.setColor(1, 1, 1, 1) # White pins
+            pin_visual.reparentTo(pin_np)
+            pin_np.setPos(x, y, pin_half_size.z) # Z pos is half height
             self.world.attachRigidBody(pin_node)
             self.pins.append(pin_np)
             
@@ -161,40 +278,37 @@ class BowlingGame(ShowBase):
 
     def setup_ball(self):
         """Creates the bowling ball."""
-        ball_radius = 0.5
+        ball_radius = 0.3
         self.ball_thrown = False
         
         # Check if ball already exists
         if hasattr(self, 'ball_np'):
             self.ball_np.removeNode()
 
-        # Physics Node (Sphere as requested)
+        # 1. Physics Node (Bullet Sphere)
         ball_shape = BulletSphereShape(ball_radius)
         ball_node = BulletRigidBodyNode('Ball')
-        ball_node.setMass(5.0) # Ball is heavy
+        ball_node.setMass(5.0) 
         ball_node.addShape(ball_shape)
         
-        # Visual Node (NodePath attached directly to the render)
+        # 2. Visual Node (Primitive Sphere) - Keeping this, as it looks better than a box
+        ball_visual = self.loader.loadModel('misc/sphere')
+        ball_visual.setScale(ball_radius)
+        
+        # 3. Attach and position
         self.ball_np = self.render.attachNewNode(ball_node)
+        ball_visual.reparentTo(self.ball_np)
         
-        # Set scale and color. The Debug Node will draw the sphere shape.
-        self.ball_np.setScale(ball_radius)
         self.ball_np.setColor(0.1, 0.1, 0.1, 1) # Dark color for bowling ball
-        
         self.world.attachRigidBody(ball_node)
         
         # Set starting position (controlled by joystick)
-        self.ball_np.setPos(self.lane_position, -8, ball_radius) # Start far back
-
-
+        self.ball_np.setPos(self.lane_position, -8, ball_radius) 
 
 
     def update_sensors(self, task):
         """
         Reads and maps REAL sensor data to game variables.
-        
-        The objects self.joystick, self.gesture, and self.encoder_container 
-        are now the live hardware objects from sensors.py.
         """
         
         # 1. Joystick for Left/Right Positioning (X-axis)
@@ -221,14 +335,15 @@ class BowlingGame(ShowBase):
 
         
         # 2. Rotary Encoder for Aiming Angle (Z-rotation)
-        # Uses the EncoderContainer update method to get the current position
         encoder_pos = self.encoder_container.update()
+        
+        # --- FIX: Invert the angle mapping to correct mirroring ---
+        self.throw_angle = encoder_pos * 2.0 # Invert direction
+        
         # Map encoder position to an angle (-20 to +20 degrees)
-        self.throw_angle = encoder_pos * 2.0 # 1 unit of turn = 2 degrees of angle
-        self.throw_angle = max(-20, min(20, self.throw_angle)) # Clamp angle
+        self.throw_angle = -max(-20, min(20, self.throw_angle)) # Clamp angle
         
         # 3. Gesture Sensor for Throw Action (UP = 0x01)
-        # Uses the APDS9960 object directly
         gesture = self.gesture.gesture()
         if gesture == 0x01 and self.game_state == self.AIMING:
             self.throw_ball()
@@ -243,10 +358,8 @@ class BowlingGame(ShowBase):
 
         if self.game_state == self.AIMING:
             # Update ball position and rotation based on sensors
-            ball_radius = 0.5
-            # This is the line that makes the sphere follow the joystick position
+            ball_radius = 0.3
             self.ball_np.setPos(self.lane_position, -8, ball_radius) 
-            # This is the line that makes the sphere show the aiming angle
             self.ball_np.setHpr(self.throw_angle, 0, 0) 
             
             self.update_aim_display()
@@ -269,6 +382,16 @@ class BowlingGame(ShowBase):
         """Applies velocity to the ball based on current aiming angle."""
         if self.ball_thrown: return
         
+        ball_body = self.ball_np.node()
+        
+        # --- FIX: Explicitly check for valid body and activate it for immediate throw ---
+        if not isinstance(ball_body, BulletRigidBodyNode):
+             print("Error: Node attached to ball_np is not a valid BulletRigidBodyNode.")
+             return
+             
+        # Explicitly activate the body (wake it up)
+        ball_body.setActive(True)
+
         self.game_state = self.THROWN
         self.ball_thrown = True
 
@@ -282,12 +405,10 @@ class BowlingGame(ShowBase):
         vy = speed * math.cos(angle_rad)
         
         # Apply impulse to the physics body of the SAME sphere object
-        ball_body = self.ball_np.node()
         ball_body.setLinearVelocity(Vec3(vx, vy, 0))
         
         # Hide aim indicators
         self.aim_text.destroy()
-        # REMOVED: self.clear_previews() 
 
 
     def check_pins(self):
@@ -306,11 +427,10 @@ class BowlingGame(ShowBase):
             self.show_win_screen()
         else:
             # --- MODIFICATION: If not a strike, allow another throw at remaining pins ---
-            # Wait 2 seconds to view the pin positions, then reset ONLY the ball.
+            # Wait 0.1 seconds to view the pin positions, then reset ONLY the ball.
             self.taskMgr.doMethodLater(0.1, self.reset_ball_only, "ResetBallForNextThrow")
             self.game_state = self.SCORING 
             
-    # REMOVED: clear_previews() method
             
     # --- NEW METHOD: Resets only the ball and returns to AIMING state ---
     def reset_ball_only(self, task=None):

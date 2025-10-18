@@ -14,11 +14,18 @@ class EncoderContainer:
     def update(self):
         """Returns the current accumulated encoder position."""
         # Negate the position to make clockwise rotation positive
-        position = -self.encoder.position
+        position = self.encoder.position
         
         # We only care about the absolute position for the game angle, 
         # so no need for button logic or printing here.
-        self.last_position = position
+
+        # Restrict position to be within -20 to +20 for game use
+        if position < -20:
+            position = -20
+            self.encoder.position = -position  # Update encoder to reflect clamped value
+        elif position > 20:
+            position = 20
+            self.encoder.position = -position  # Update encoder to reflect clamped value
         return position
 
 def initialize_real_sensors():
