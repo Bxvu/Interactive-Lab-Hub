@@ -41,6 +41,20 @@ class BowlingGame(ShowBase):
         self.lane_position = 0 # Horizontal position controlled by joystick
         self.pins_fallen = 0
         self.pins = []
+
+        self.throw_sound = self.loader.loadSfx("sounds/bowling.wav")
+        self.pin_hit_sounds = [
+            self.loader.loadSfx("sounds/pin1.wav"),
+            self.loader.loadSfx("sounds/pin2.wav"),
+            self.loader.loadSfx("sounds/pin3.wav"),
+            self.loader.loadSfx("sounds/pin4.wav"),
+            self.loader.loadSfx("sounds/pin5.wav"),
+            self.loader.loadSfx("sounds/pin6.wav"),
+        ]
+        self.win_sounds = [
+            self.loader.loadSfx("sounds/win.wav"),
+            self.loader.loadSfx("sounds/win2.wav"),
+        ]
         
         # New constant for movement speed
         self.JOYSTICK_SENSITIVITY = 0.05 # Max change in position per update cycle
@@ -283,6 +297,9 @@ class BowlingGame(ShowBase):
             pin_np = self.render.attachNewNode(pin_node)
             pin_visual.reparentTo(pin_np)
             pin_np.setPos(x, y, pin_half_size.z) # Z pos is half height
+
+            pin_np.setTag('hit', 'false')
+
             self.world.attachRigidBody(pin_node)
             self.pins.append(pin_np)
             
@@ -342,7 +359,7 @@ class BowlingGame(ShowBase):
             normalized_delta = difference / (512.0 - dead_zone) 
         
         # Apply the delta to the current position
-        self.lane_position += normalized_delta * self.JOYSTICK_SENSITIVITY
+        self.lane_position -= normalized_delta * self.JOYSTICK_SENSITIVITY
         
         # Clamp the position to ensure the ball stays within the lane bounds (-1.5 to 1.5)
         self.lane_position = max(-1.5, min(1.5, self.lane_position))
@@ -384,6 +401,35 @@ class BowlingGame(ShowBase):
             self.update_aim_display()
             
         elif self.game_state == self.THROWN:
+            
+            # --- CORRECTED COLLISION CODE ---
+            
+            # 1. Get the ball's physics node
+            ball_node = self.ball_np.node()
+            
+            # 2. Perform a contact test FOR THE BALL against the world
+            result = self.world.contactTest(ball_node)
+
+            # 3. Get the list of contacts FROM THE RESULT
+            contacts = result.getContacts()
+
+            for contact in contacts:
+                # node0 is the ball (which we tested), 
+                # node1 is the other object it hit.
+                pin_node = contact.getNode1()
+                
+                # 4. Check if the other node is a pin
+                if 'Pin' in pin_node.getName():
+                    
+                    # 5. Find the pin's main NodePath (the one we tagged)
+                    # We use render.find() to get the NodePath from the node's name
+                    pin_np = self.render.find(f"**/{pin_node.getName()}")
+                    
+                    if not pin_np.isEmpty() and pin_np.getTag('hit') == 'false':
+                        sound = random.choice(self.pin_hit_sounds)
+                        sound.play()
+                        pin_np.setTag('hit', 'true') # Mark as hit
+
             # Check if ball has moved far down the lane (arbitrary point)
             if self.ball_np.getY() > 25:
                 self.game_state = self.SCORING
@@ -401,6 +447,8 @@ class BowlingGame(ShowBase):
         """Applies velocity to the ball based on current aiming angle."""
         if self.ball_thrown: return
         
+        self.throw_sound.play()
+
         ball_body = self.ball_np.node()
         
         # --- FIX: Explicitly check for valid body and activate it for immediate throw ---
@@ -442,7 +490,7 @@ class BowlingGame(ShowBase):
         self.pins_fallen = pins_knocked
         self.update_score_display()
 
-        if self.pins_fallen >= 1:
+        if self.pins_fallen >= 10:
             self.show_win_screen()
         else:
             # --- MODIFICATION: If not a strike, allow another throw at remaining pins ---
@@ -558,6 +606,9 @@ class BowlingGame(ShowBase):
     def show_win_screen(self):
         """Displays the win message."""
         self.game_state = self.WIN
+
+        sound = random.choice(self.win_sounds)
+        sound.play()
         
         # --- NEW: Set win flag in background thread state ---
         self.hardware_state.win_flag = True
