@@ -55,6 +55,8 @@ class BowlingGame(ShowBase):
             self.loader.loadSfx("sounds/win.wav"),
             self.loader.loadSfx("sounds/win2.wav"),
         ]
+
+        self.aim_line_np = None
         
         # New constant for movement speed
         self.JOYSTICK_SENSITIVITY = 0.05 # Max change in position per update cycle
@@ -186,7 +188,7 @@ class BowlingGame(ShowBase):
         debugNode.showWireframe(True)
         debugRender = self.render.attachNewNode(debugNode)
         self.world.setDebugNode(debugRender.node())
-        debugRender.show() 
+        # debugRender.show() 
         # --------------------------------------------------------------------
 
     def rotate_test_box(self, task):
@@ -267,6 +269,16 @@ class BowlingGame(ShowBase):
         np_right.setPos(wall_x_pos, wall_center_y, wall_height / 2)
         self.world.attachRigidBody(node)
 
+        # Back Wall
+        # NEW VISUAL: Custom CardMaker Box
+        shape = BulletBoxShape(Vec3((lane_width + 2 * wall_thickness)/2, wall_thickness/2, wall_height/2))
+        node = BulletRigidBodyNode('BackWall')
+        node.addShape(shape)
+        np_back = self.render.attachNewNode(node)
+        # Position NodePath (Physics Center)
+        np_back.setPos(0, 43, wall_height / 2)
+        self.world.attachRigidBody(node)
+
 
     def setup_pins(self):
         """Creates the 10 bowling pins at the end of the lane."""
@@ -335,6 +347,33 @@ class BowlingGame(ShowBase):
         # Set starting position (controlled by joystick)
         self.ball_np.setPos(self.lane_position, -8, ball_radius) 
 
+    def create_aim_line(self):
+        """Creates a visual line for aiming, parented to the ball."""
+        # Safety check in case ball doesn't exist yet
+        if not hasattr(self, 'ball_np') or self.ball_np.isEmpty():
+            return 
+
+        line_length = 5.0  # How long the line is
+        line_width = 0.05  # How wide the line is
+        ball_radius = 0.3  # Must match setup_ball
+        ground_clearance = 0.01 # To prevent flickering on the lane
+
+        # Use CardMaker to create a thin rectangle
+        cm = CardMaker('aim_line_card')
+        cm.setFrame(-line_width / 2, line_width / 2, 0, line_length) 
+        
+        # Attach the line directly to the ball NodePath
+        self.aim_line_np = self.ball_np.attachNewNode(cm.generate())
+        
+        # Position the line relative to the ball
+        self.aim_line_np.setHpr(0, -90, 0) # Pitch it flat
+        self.aim_line_np.setPos(0, ball_radius, -ball_radius + ground_clearance)
+
+        # Set visual properties
+        self.aim_line_np.setColor(1, 1, 0, 0.75) # Yellow, semi-transparent
+        self.aim_line_np.setTransparency(True)
+        self.aim_line_np.setLightOff()        # Not affected by light
+        self.aim_line_np.setDepthTest(False)    # Always draw on top of the lane
 
     def update_sensors(self, task):
         """
@@ -397,6 +436,12 @@ class BowlingGame(ShowBase):
             ball_radius = 0.3
             self.ball_np.setPos(self.lane_position, -8, ball_radius) 
             self.ball_np.setHpr(self.throw_angle, 0, 0) 
+
+            if not self.aim_line_np or self.aim_line_np.isEmpty():
+                self.create_aim_line()
+            elif self.aim_line_np:
+                # Ensure it's visible if it exists
+                self.aim_line_np.show()
             
             self.update_aim_display()
             
@@ -477,6 +522,10 @@ class BowlingGame(ShowBase):
         # Hide aim indicators
         self.aim_text.destroy()
 
+        # Hide the aim line as well, checking if it exists first
+        if self.aim_line_np and not self.aim_line_np.isEmpty():
+            self.aim_line_np.hide()
+
 
     def check_pins(self):
         """Checks how many pins have fallen and determines game over."""
@@ -507,6 +556,8 @@ class BowlingGame(ShowBase):
         if hasattr(self, 'ball_np'):
              self.world.removeRigidBody(self.ball_np.node())
              self.ball_np.removeNode()
+
+        self.aim_line_np = None
 
         # 2. Reset position and recreate ball
         self.lane_position = 0 # Reset lane position to center for new throw
