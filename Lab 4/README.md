@@ -58,6 +58,7 @@
 
 ## Lab Overview
 **NAMES OF COLLABORATORS HERE**
+Benthan Vu (bv233) (I think I was too ambitious, I should've gotten a teammate...)
 
 <details>
 	<summary><strong>Instructions</strong></summary>
@@ -410,6 +411,51 @@ Following exploration and reflection from Part 1, complete the "looks like," "wo
 
 #### Chaining Devices and Exploring Interaction Effects
 
+My device is a bowling game. It uses 3 sensors. The joystick, rotary encoder, and gesture sensor. It outputs to a game screen, the speaker, and a couple of LEDs. 
+Here is a picture of the sensors the device uses:
+
+![image](part%202/submission/sensors1.jpg)
+
+##### Code
+
+The code is split into two main files in the part 2 folder. All the sensor initialization and data collection for the joystick, encoder, gesture detector, and controlling the LEDS on the breadboard is in `sensors.py` while the game state of the game like the amount of pins remaining is in `bowling_game.py`. I have also updated `requirements2025.txt` with libraries needed for my prototype. Google Gemini helped with the code too. 
+
+To run the game, install the requirements in a venv, and then cd to the part 2 folder and run `python bowling_game.py`. Also You need the sensors and breadboard also connected to the pi or else it won't work. 
+
+##### Prototype In Action
+
+*Click Below image for video*
+[![Interactions](https://img.youtube.com/vi/RBoHuEK0bSc/maxresdefault.jpg)](https://youtu.be/RBoHuEK0bSc)
+More interaction can be seen in following video demos further below
+
+##### Sketch of Connections
+
+![image](part%202/submission/lab4_sketch.jpg)
+![image](part%202/submission/lab4_interactions.jpg)
+
+##### Reflection
+
+I spent multiple hours trying to figure out how to use the breadboard and GPIO expander. There were no instructions on the Lab Hub so I had to look online. I only had LEDS with 4 legs and some resistors, but most of the tutorials told me to also use jumper cables and an LED with two legs. I guess that's due to me not knowing exactly what was required when I got some of the materials during Lab time. So because of that, I decided to go to the MakerLab and hope that they had the missing pieces. They did, and I was able to get to work. Because I had never worked with wires before, it took a long time figuring out the combinations of where to place things. I repeatedly asked Google Gemini to help me, but its responses were confusing and sometimes the pi would shut down randomly. All the tutorials I opened connected the breadboard directly to the pi with jumper cables, but I wanted to use the GPIO expander since the screen was in the way of the pins on the pi. Eventually I got a LED to work, and that led to me finally figuring out how to use the GPIO expander.
+
+![image](part%202/submission/leds1.jpg)
+
+Here is a video of my progression *Click Below image for video*
+[![Interactions](https://img.youtube.com/vi/ZdTUadfNn1A/maxresdefault.jpg)](https://youtu.be/ZdTUadfNn1A)
+
+Final Setup: 
+
+![image](part%202/submission/led_setup.jpg)
+
+What I learned about multi-input/multi-output interaction was that most of the time, having one sensor by itself works great, but then when you add them together, sometimes their addresses can conflict, causing errors. This seems to mainly happen when chaining together sensors from different companies. The joystick and the GPIO expander had this issue, as the joystick was from Adafruit while the expander was from Qwiic. I tried changing the address of the expander with copper tape, like how I was able to do it with the LED button in a previous lab, but this time it didn't work. I asked Google Gemini how I could change the address, and it said to use jumper cables. That did work, but unfortunately the only way I could get the address to change was to position the cables in a fragile position. So one tap and they would fall off. 
+
+Here is an image of my attempt to use copper tape to change the expander address.
+
+![image](part%202/submission/copper_tape.jpg)
+
+
+<details>
+	<summary><strong>Instructions</strong></summary>
+
 For Part 2, you will design and build a fun interactive prototype using multiple inputs and outputs. This means chaining Qwiic and STEMMA QT devices (e.g., buttons, encoders, sensors, servos, displays) and/or combining with traditional breadboard prototyping (e.g., LEDs, buzzers, etc.).
 
 **Your prototype should:**
@@ -568,14 +614,43 @@ For more details and advanced usage, see the [official SparkFun Servo pHAT docum
 A servo motor is a rotary actuator that allows for precise control of angular position. The position is set by the width of an electrical pulse (PWM). You can read [this Adafruit guide](https://learn.adafruit.com/adafruit-arduino-lesson-14-servo-motors/servo-motors) to learn more about how servos work.
 
 ---
+</details>
 
 
 ### Part F
 
 ### Record
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 Document all the prototypes and iterations you have designed and worked on! Again, deliverables for this lab are writings, sketches, photos, and videos that show what your prototype:
 * "Looks like": shows how the device should look, feel, sit, weigh, etc.
 * "Works like": shows what the device can do
 * "Acts like": shows how a person would interact with the device
+</details>
 
+**Looks like**
+
+The prototype I made for part 1 of the lab seemed a bit too steep for all the sensors and stuff added to it, so I made a new prototype that is still slanted, but not as much. It is made of two layers, so that the wires that need to connect to the pi, which are the power and hdmi cables, can go beneath the sensors instead of crossing over them. If you look closely, I also added some screws to the sensors to make sure they don't go out of place when the player turns or rotates them. The device should sit next to the projector or screen that has the bowling game, hopefully so the player can simply look up to see whats happening. 
+
+![image](part%202/submission/final_device_top.jpg)
+
+![image](part%202/submission/final_device_side.jpg)
+
+**Works like**
+
+The device is kind of like a controller for the bowling game made specifically for it. I was envisioning it kind of working like an arcade cabinet game with all these different input devices. Basically the user can move the ball left and right or rotate it at the start of the lane. Then when they are ready they can swipe up over the gesture sensor to throw the ball. Then the ball is thrown and there are some simple physics for the cones that it hits. When all pins are knocked over, the user wins and the game resets. There are also sound effects for when the ball is thrown, when a pin is hit, and when the player wins. Additionally, in the win state, the LEDs flash as a celebratory action.
+
+*Click Below image for video*
+[![Interactions](https://img.youtube.com/vi/UMPQX-aOaxM/maxresdefault.jpg)](https://youtu.be/UMPQX-aOaxM)
+
+**Acts like**
+
+Here is a video of interactions with users. I was trying to fix my LEDs before it so I forgot to bring the speaker and they didn't get to experience audio output, but they were able to see most of the device. Overall it seemed pretty intuitive for the users, as they were able to rotate, move, and throw the ball at the pins until they won.
+
+
+
+
+##### Final Thoughts
+
+If there was a better more robust way to have my LED lights, I would like to learn about it. They worked fine when I first set them up in the makerlab, but later, after walking home, the wires shifted and sometimes the lights wouldn't work. There must be a better way to hold them in place. Also the placement of the gesture sensor and breadboard could be changed. I didn't think about how the jumper wire that changes the GPIO expander's address may interfere with the user's swipe upwards. If I could learn a better way to change the expander's address that would be nice too. Some feedback from users is that I should remove the red cube, change some of the font color of the game, and add more bounciness to the ball. The projector placement also was kind of bad during the user test since many of the outlets I tried to connect to in the room did not work except for one next to a wall, away from any table. Also there was still too much daylight so the screen was hard to see.

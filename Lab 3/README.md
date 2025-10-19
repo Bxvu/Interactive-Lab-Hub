@@ -66,7 +66,7 @@ The duck assistant uses ollama with a stuffed animal duck personality to respond
 
 ### Code
 
-The code for it is in the part 2 folder of this lab. I have also updated the requirements.txt with some new libraries that were needed for sensors. There are 3 python files. One for the `focus_timer.py` system which focuses on updating the timer and getting sensor data, and another for the `voice_assistant.py` which uses ollama and takes in microphone input and is what outputs the audio. The `desk_buddy.py` file runs both at the same time using multithreading and allows them to communicate to each other, such as the focus timer detecting that the duck was petted, and sending a command to the voice assistant so that it can make a response.
+The code for it is in the part 2 folder of this lab. I have also updated the requirements.txt with some new libraries that were needed for sensors. There are 3 python files. One for the `focus_timer.py` system which focuses on updating the timer and getting sensor data, and another for the `voice_assistant.py` which uses ollama and takes in microphone input and is what outputs the audio. The `desk_buddy.py` file runs both at the same time using multithreading and allows them to communicate to each other, such as the focus timer detecting that the duck was petted, and sending a command to the voice assistant so that it can make a response. I also used Google Gemini to help with the code.
 
 To run, make a venv and install the `requirements.txt` in the main Lab 3 folder, then `cd` to part 2 folder and download the duck's voice in that folder using `python -m piper.download_voices en_GB-northern_english_male-medium`
 Then run `python desk_buddy.py.`
