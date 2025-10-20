@@ -430,8 +430,8 @@ More interaction can be seen in following video demos further below
 
 ##### Sketch of Connections
 
-![image](part%202/submission/lab4_sketch.jpg)
-![image](part%202/submission/lab4_interactions.jpg)
+![image](part%202/submission/lab4_sketch.png)
+![image](part%202/submission/lab4_interactions.png)
 
 ##### Reflection
 
@@ -648,9 +648,8 @@ The device is kind of like a controller for the bowling game made specifically f
 
 Here is a video of interactions with users. I was trying to fix my LEDs before it so I forgot to bring the speaker and they didn't get to experience audio output, but they were able to see most of the device. Overall it seemed pretty intuitive for the users, as they were able to rotate, move, and throw the ball at the pins until they won.
 
-
-
+[![Interactions](https://img.youtube.com/vi/BQRtVDMC7cQ/maxresdefault.jpg)](https://youtu.be/BQRtVDMC7cQ)
 
 ##### Final Thoughts
 
-If there was a better more robust way to have my LED lights, I would like to learn about it. They worked fine when I first set them up in the makerlab, but later, after walking home, the wires shifted and sometimes the lights wouldn't work. There must be a better way to hold them in place. Also the placement of the gesture sensor and breadboard could be changed. I didn't think about how the jumper wire that changes the GPIO expander's address may interfere with the user's swipe upwards. If I could learn a better way to change the expander's address that would be nice too. Some feedback from users is that I should remove the red cube, change some of the font color of the game, and add more bounciness to the ball. The projector placement also was kind of bad during the user test since many of the outlets I tried to connect to in the room did not work except for one next to a wall, away from any table. Also there was still too much daylight so the screen was hard to see.
+If there was a better more robust way to have my LED lights, I would like to learn about it. They worked fine when I first set them up in the makerlab, but later, after walking home, the wires shifted and sometimes the lights wouldn't work. There must be a better way to hold them in place. Also the placement of the gesture sensor and breadboard could be changed. I didn't think about how the jumper wire that changes the GPIO expander's address may interfere with the user's swipe upwards. If I could learn a better way to change the expander's address that would be nice too. Some feedback from users is that I should remove the red cube, change some of the font color of the game, and add more bounciness to the ball. The projector placement also was kind of bad during one user test since many of the outlets I tried to connect to in the room did not work except for one next to a wall, away from any table. Also there was still too much daylight so the screen was hard to see. The last test I did connected to a TV which seemed a bit better but the pi had to be close to it due to wire limited wire lengths.
