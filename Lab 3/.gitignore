@@ -5,3 +5,7 @@ output.txt
 welcome.wav
 test.txt
 /voices
+/part 2/en_GB-northern_english_male-medium.onnx
+/part 2/en_GB-northern_english_male-medium.onnx.json
+/part 2/en_GB-semaine-medium.onnx
+/part 2/en_GB-semaine-medium.onnx.json
