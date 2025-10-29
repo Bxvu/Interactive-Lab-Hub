@@ -1,0 +1,6 @@
+0 g note
+1 f note
+2 nothing
+3 c note
+4 d note
+5 e note

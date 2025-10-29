@@ -3,6 +3,8 @@
 **NAMES OF COLLABORATORS HERE**
 
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 For lab this week, we focus on creating interactive systems that can detect and respond to events or stimuli in the environment of the Pi, like the Boat Detector we mentioned in lecture. 
 Your **observant device** could, for example, count items, find objects, recognize an event or continuously monitor a room.
 
@@ -37,12 +39,16 @@ C) [Flight test](#part-c)
 D) [Reflect](#part-d)
 
 ---
+</details>
+
 
 ### Part A
 ### Play with different sense-making algorithms.
 
 #### Pytorch for object recognition
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 For this first demo, you will be using PyTorch and running a MobileNet v2 classification model in real time (30 fps+) on the CPU. We will be following steps adapted from [this tutorial](https://pytorch.org/tutorials/intermediate/realtime_rpi.html).
 
 ![torch](Readme_files/pyt.gif)
@@ -69,18 +75,25 @@ python infer.py
 The first 2 inferences will be slower. Now, you can try placing several objects in front of the camera.
 
 Read the `infer.py` script and become familiar with the code. You can change the video resolution and frames per second (FPS). You may also use the weights of the larger pre-trained mobilenet_v3_large model, as described [here](https://pytorch.org/tutorials/intermediate/realtime_rpi.html#model-choices).
+</details>
+
 
 #### More classes
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 [PyTorch supports transfer learning](https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html), so you can fine‑tune and transfer learn models to recognize your own objects. It requires extra steps, so we won't cover it here.
 
 For more details on transfer learning and deployment to embedded devices, see Deep Learning on Embedded Systems: A Hands‑On Approach Using Jetson Nano and Raspberry Pi (Tariq M. Arif). [Chapter 10](https://onlinelibrary.wiley.com/doi/10.1002/9781394269297.ch10) covers transfer learning for object detection on desktop, and [Chapter 15](https://onlinelibrary.wiley.com/doi/10.1002/9781394269297.ch15) describes moving models to the Pi using ONNX.
 
 ### Machine Vision With Other Tools
 The following sections describe tools ([MediaPipe](#mediapipe) and [Teachable Machines](#teachable-machines)).
+</details>
 
 #### MediaPipe
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 A established open source and efficient method of extracting information from video streams comes out of Google's [MediaPipe](https://mediapipe.dev/), which offers state of the art face, face mesh, hand pose, and body pose detection.
 
 ![Media pipe](Readme_files/mp.gif)
@@ -101,11 +114,14 @@ Try the two main features of this script: 1) pinching for percentage control, an
 Consider how you might use this position based approach to create an interaction, and write how you might use it on either face, hand or body pose tracking.
 
 (You might also consider how this notion of percentage control with hand tracking might be used in some of the physical UI you may have experimented with in the last lab, for instance in controlling a servo or rotary encoder.)
+</details>
 
 
 
 #### Moondream Vision-Language Model
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 [Moondream](https://www.ollama.com/library/moondream) is a lightweight vision-language model that can understand and answer questions about images. Unlike the classification models above, Moondream can describe images in natural language and answer specific questions about what it sees.
 
 To use Moondream, first make sure Ollama is running and pull the model:
@@ -121,8 +137,12 @@ python moondream_simple.py
 This will capture an image from your webcam and let you ask questions about it in natural language. Note that vision-language models are slower than classification models (responses may take up to minutes on a Raspberry Pi). There are newer models like [LFM2-VL](https://huggingface.co/LiquidAI/LFM2-VL-450M-GGUF), but many are very recent and not yet optimized for embedded devices.
 
 **Design consideration**: Think about how slower response times change your interaction design. What kinds of observant systems benefit from thoughtful, delayed responses rather than real-time classification? Consider systems that monitor over longer time periods or provide periodic summaries rather than instant feedback.
+</details>
 
 #### Teachable Machines
+
+<details>
+	<summary><strong>Instructions</strong></summary>
 Google's [TeachableMachines](https://teachablemachine.withgoogle.com/train) is very useful for prototyping with the capabilities of machine learning. We are using [a python package](https://github.com/MeqdadDev/teachable-machine-lite) with tensorflow lite to simplify the deployment process.
 
 ![Tachable Machines Pi](Readme_files/tml_pi.gif)
@@ -141,9 +161,14 @@ After installation, connect your webcam to your Pi and use **VNC to access to yo
 Next train your own model. Visit [TeachableMachines](https://teachablemachine.withgoogle.com/train), select Image Project and Standard model. The raspberry pi 4 is capable to run not just the low resource models. Second, use the webcam on your computer to train a model. *Note: It might be advisable to use the pi webcam in a similar setting you want to deploy it to improve performance.*  For each class try to have over 150 samples, and consider adding a background or default class where you have nothing in view so the model is trained to know that this is the background. Then create classes based on what you want the model to classify. Lastly, preview and iterate. Finally export your model as a 'Tensorflow lite' model. You will find an '.tflite' file and a 'labels.txt' file. Upload these to your pi (through one of the many ways such as [scp](https://www.raspberrypi.com/documentation/computers/remote-access.html#using-secure-copy), sftp, [vnc](https://help.realvnc.com/hc/en-us/articles/360002249917-VNC-Connect-and-Raspberry-Pi#transferring-files-to-and-from-your-raspberry-pi-0-6), or a connected visual studio code remote explorer).
 ![Teachable Machines Browser](Readme_files/tml_browser.gif)
 ![Tensorflow Lite Download](Readme_files/tml_download-model.png)
+</details>
 
 Include screenshots of your use of Teachable Machines, and write how you might use this to create your own classifier. Include what different affordances this method brings, compared to the OpenCV or MediaPipe options.
 
+How I could use Teachable Machines is use it to create my own classifier by having it detect fingers on frets. I will have it be simple because I do not think I can gather enough data for all different fret and string combinations in 2 weeks. So I will train the model to guide the user on how to play a simple happy birthday song. So the teachable machine part should probably recognize the guitar note being held visually, as well as the audio noise when it is played. 
+
+<details>
+	<summary><strong>Instructions</strong></summary>
 #### (Optional) Legacy audio and computer vision observation approaches
 In an earlier version of this class students experimented with observing through audio cues. Find the material here:
 [Audio_optional/audio.md](Audio_optional/audio.md). 
@@ -151,6 +176,7 @@ Teachable machines provides an audio classifier too. If you want to use audio cl
 
 In an earlier version of this class students experimented with foundational computer vision techniques such as face and flow detection. Techniques like these can be sufficient, more performant, and allow non discrete classification. Find the material here:
 [CV_optional/cv.md](CV_optional/cv.md).
+</details>
 
 ### Part B
 ### Construct a simple interaction.
@@ -159,6 +185,7 @@ In an earlier version of this class students experimented with foundational comp
 * This can be as simple as the boat detector shown in lecture.
 * Try out different interaction outputs and inputs.
 
+I will pick the teachable machines model and teach it 6 classes based on 5 notes that require holding a fret in the happy birthday song + nothing class. I tried different interaction outputs with teachable machines and google colab.
 
 **\*\*\*Describe and detail the interaction, as well as your experimentation here.\*\*\***
 
@@ -168,15 +195,38 @@ In an earlier version of this class students experimented with foundational comp
 Now flight test your interactive prototype and **note down your observations**:
 For example:
 1. When does it what it is supposed to do?
+
+It does what its supposed to do when the user places their finger in such a way on the fret that the model classifies it correctly.
+
 1. When does it fail?
+
+It fails when the lighting is bad or the user places their finger on the fret in a way that confuses the classifier.
+
 1. When it fails, why does it fail?
+
+It fails because I do not think I have enough data, or need a more complex model than teachable machines.
+
 1. Based on the behavior you have seen, what other scenarios could cause problems?
+
+The other scenarios that could cause problems are background noise, the guitar not being close enough to the camera, and fingers being placed on frets not trained by the model.
+
 
 **\*\*\*Think about someone using the system. Describe how you think this will work.\*\*\***
 1. Are they aware of the uncertainties in the system?
+
+I do not think they would be aware of the system uncertainties. They would probably think that the model works 100% and may get confused about what fret to put their finger on.
+
 1. How bad would they be impacted by a miss classification?
+
+It would pretty bad since the user could get confused about what they need to do.
+
 1. How could change your interactive system to address this?
+
+I could try to add more training data, or add instruction text on the screen.  I could also make the program also use audio and not go to the next note until it hears the correct one being played.
+
 1. Are there optimizations you can try to do on your sense-making algorithm.
+
+I could try to first have the model detect whether the user's finger is placed on the 1st or 2nd string.
 
 ### Part D
 ### Characterize your own Observant system
