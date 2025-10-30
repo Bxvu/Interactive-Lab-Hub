@@ -225,13 +225,18 @@ while True:
 
         THRESHOLD = 0.15
         
+        # NEW: Store which notes exceed threshold for later comparison
+        detected_audio_notes = {}  # Maps cleaned label to confidence
+        
         for i, probability in enumerate(probabilities):
             if probability >= THRESHOLD and audio_labels[i] != "8 Background Noise":
                 note_label = audio_labels[i]
+                cleaned = clean_label(note_label)
                 confidence_percent = probability * 100
+                detected_audio_notes[cleaned] = confidence_percent
                 
                 # Print the detected note and confidence to the console
-                print(f"HIGH CONFIDENCE AUDIO DETECTED: {note_label} at {confidence_percent:.2f}%")
+                print(f"HIGH CONFIDENCE AUDIO DETECTED: {note_label} (cleaned: {cleaned}) at {confidence_percent:.2f}%")
 
         # Sort predictions by confidence in descending order
         sorted_indices = np.argsort(probabilities)[::-1]
@@ -314,20 +319,25 @@ while True:
             
             # Now find which audio label maps to that note name
             # Reverse lookup: find the key in AUDIO_NOTES_MAP whose value matches expected_note_name
-            audio_target = None
+            audio_target_label = None
             for audio_label, note_name in AUDIO_NOTES_MAP.items():
                 if note_name == expected_note_name:
-                    audio_target = clean_label(audio_label)
+                    audio_target_label = audio_label
                     break
+
+            # Check if the audio note was detected (using the stored detections)
+            audio_detected = False
+            if audio_target_label is not None and 'detected_audio_notes' in locals():
+                cleaned_target = clean_label(audio_target_label)
+                if cleaned_target in detected_audio_notes:
+                    confidence = detected_audio_notes[cleaned_target]
+                    audio_detected = True
+                    print(f"MATCH! Expected: {audio_target_label} (cleaned: {cleaned_target}), Confidence: {confidence:.2f}%")
+                # else:
+                    # print(f"Expected: {audio_target_label} (cleaned: {cleaned_target}) - Not detected above threshold")
             
-            # Fallback if no mapping found
-            if audio_target is None:
-                audio_target = expected_note_name.lower()
-            
-            if audio_note != "no note" and audio_note != "background":
-                print(f"Expected Audio Note: {audio_target}, Detected Audio Note: {audio_note}")
             # CONDITION: Correct AUDIO note is played
-            if audio_note == audio_target:
+            if audio_detected:
                 
                 # This check only needs to pass once per note
                 if (current_time - last_action_time) > FEEDBACK_DISPLAY_TIME:
