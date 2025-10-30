@@ -9,7 +9,6 @@ parent = Path(__file__).resolve().parent.parent
 if str(parent) not in sys.path:
     sys.path.insert(0, str(parent))
 
-import HandTrackingModule as htm
 import HandTrackingModule as htm 
 import math
 import numpy as np 
