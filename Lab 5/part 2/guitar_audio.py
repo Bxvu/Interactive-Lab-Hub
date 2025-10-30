@@ -44,18 +44,19 @@ NOTES_MAPPED = {
 }
 
 INSTRUCTIONS = {
-    'c': "Hold A (Third String, 2nd Fret)",
-    '3s': "Play Third String Open",
-    'd': "Hold D (Second String, 3rd Fret)",
-    'e': "Hold C (Second String, 1st Fret)",
-    '2s': "Play Second String Open",
-    'f': "Hold F (First String, 1st Fret)",
-    'g': "Hold G (First String, 3rd Fret)",
-    '1s': "Play First String Open",
+    'c': "A (Third String, 2nd Fret)",
+    '3s': "Third String Open",
+    'd': "D (Second String, 3rd Fret)",
+    'e': "C (Second String, 1st Fret)",
+    '2s': "Second String Open",
+    'f': "F (First String, 1st Fret)",
+    'g': "G (First String, 3rd Fret)",
+    '1s': "First String Open",
 }
 
 # --- Debounce Configuration (New!) ---
-MISCLASSIFICATION_THRESHOLD = 7 # Allow 7 consecutive frames of misclassification
+MISCLASSIFICATION_THRESHOLD_BASE = 7  # Base threshold at 0% progress
+MISCLASSIFICATION_THRESHOLD_MAX = 14  # Max threshold at 90%+ progress
 CORRECT_HOLD_TIME = 1.85           # Time in seconds the correct note must be held
 FEEDBACK_DISPLAY_TIME = 1.85 # Time in seconds to display "Correct!"
 
@@ -285,6 +286,26 @@ while True:
         # --- STAGE 1: HOLD POSITION (Visual Check Only) ---
         if stage == STAGE_HOLD and not is_open_string:
             
+            # Calculate dynamic threshold based on progress
+            if correct_note_start_time is not None:
+                progress = (current_time - correct_note_start_time) / CORRECT_HOLD_TIME
+                progress = min(1.0, progress)
+                
+                # Ramp up tolerance: more lenient as progress increases
+                # At 0% progress: use base threshold (7 frames)
+                # At 90%+ progress: use max threshold (20 frames)
+                if progress < 0.9:
+                    # Linear interpolation from base to max
+                    dynamic_threshold = MISCLASSIFICATION_THRESHOLD_BASE + \
+                                      (MISCLASSIFICATION_THRESHOLD_MAX - MISCLASSIFICATION_THRESHOLD_BASE) * (progress / 0.9)
+                else:
+                    dynamic_threshold = MISCLASSIFICATION_THRESHOLD_MAX
+                
+                dynamic_threshold = int(dynamic_threshold)
+            else:
+                # No progress yet, use base threshold
+                dynamic_threshold = MISCLASSIFICATION_THRESHOLD_BASE
+            
             # CONDITION: Correct VISUAL note is held
             if detected_note == target_clean:
                 # Reset misclassification count if correct
@@ -304,7 +325,7 @@ while True:
             else:
                 # --- Debounce Logic (WRONG FRET DETECTED) ---
                 misclassification_count += 1
-                if correct_note_start_time is not None and misclassification_count < MISCLASSIFICATION_THRESHOLD:
+                if correct_note_start_time is not None and misclassification_count < dynamic_threshold:
                     pass # Still within the debounce grace period
                 else:
                     correct_note_start_time = None # RESET hold timer
@@ -414,7 +435,8 @@ while True:
                     cv.FONT_HERSHEY_SIMPLEX, 0.8, text_color, 2)
                     
     # 2. Current Instruction (Bottom Left) - Keep this for the detailed text
-    # instruction_text = f"Instruction: {INSTRUCTIONS.get(target_note, 'N/A')}"
+    # hold_or_play_text = "Hold" if stage == STAGE_HOLD and not is_open_string else "Play"
+    # instruction_text = f"Instruction: {hold_or_play_text} {INSTRUCTIONS.get(target_note, 'N/A')}"
     # cv.putText(frame, instruction_text, (10, hCam - 30), 
     #            cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
@@ -430,10 +452,39 @@ while True:
     # 3. Show the frame
     cv.imshow('Guitar Note Trainer', frame)
     
-    # 4. Check for exit key (ESC)
+    # 4. Check for keyboard input
     k = cv.waitKey(1)
+    
+    # ESC key to exit
     if k % 256 == 27: 
         break
+    
+    # 'S' key to skip current note/stage
+    elif k % 256 == ord('s') or k % 256 == ord('S'):
+        print("SKIPPING current note/stage")
+        
+        # If we're in HOLD stage, skip to PLAY stage for the same note
+        if stage == STAGE_HOLD and current_note_index < len(NOTE_SEQUENCE):
+            stage = STAGE_PLAY
+            correct_note_start_time = None
+            last_action_time = current_time
+            feedback_message = "SKIPPED HOLD! Now Play the Note!"
+            print(f"Skipped to PLAY stage for note {current_note_index + 1}")
+        
+        # If we're in PLAY stage (or open string), skip to next note
+        elif (stage == STAGE_PLAY or is_open_string) and current_note_index < len(NOTE_SEQUENCE):
+            current_note_index += 1
+            stage = STAGE_HOLD  # Reset to HOLD for next note
+            
+            if current_note_index < len(NOTE_SEQUENCE):
+                target_note = NOTE_SEQUENCE[current_note_index]
+                feedback_message = "SKIPPED! Next Note Ready..."
+                print(f"Skipped to note {current_note_index + 1}: {target_note}")
+            else:
+                feedback_message = "SONG COMPLETE! (via skip)"
+                
+            correct_note_start_time = None
+            last_action_time = current_time
 
 # Clean up
 cap.release()
