@@ -17,11 +17,41 @@ import numpy as np
 cap = cv.VideoCapture(0)
 
 # --- Configuration ---
-# Simplified "Happy Birthday" sequence (replace with your actual note labels)
-# The labels MUST exactly match the 'label' output from your model, e.g., '1 C Major'
-NOTE_SEQUENCE = ['c', 'e', 'c', 'd', 'e', 'g', 'e', 'c', 'f']
-CORRECT_HOLD_TIME = 1.5 # Time in seconds the correct note must be held
-FEEDBACK_DISPLAY_TIME = 1.5 # Time in seconds to display "Correct!"
+# Simplified "Happy Birthday" sequence
+# actually cecdegecffede
+NOTE_SEQUENCE = ['c', 'e', 'c', 'd', 'e', 'g', 'e', 'c', 'f', 'f', 'e', 'd', 'e']
+# I actually mislabeled some notes, so here is the correct mapping:
+# wrong -> actual
+# 2-e -> c
+# 3-c -> a
+# 3-b -> g
+
+NOTES_MAPPED = {
+    'c': 'A',
+    'd': 'D',
+    'e': 'C',
+    'f': 'F',
+    'g': 'G',
+    '1s': 'First String Open',
+    '2s': 'Second String Open',
+    '3s': 'Third String Open',
+}
+
+INSTRUCTIONS = {
+    'c': "Hold A (Third String, 2nd Fret)",
+    '3s': "Play Third String Open",
+    'd': "Hold D (Second String, 3rd Fret)",
+    'e': "Hold C (Second String, 1st Fret)",
+    '2s': "Play Second String Open",
+    'f': "Hold F (First String, 1st Fret)",
+    'g': "Hold G (First String, 3rd Fret)",
+    '1s': "Play First String Open",
+}
+
+# --- Debounce Configuration (New!) ---
+MISCLASSIFICATION_THRESHOLD = 7 # Allow 7 consecutive frames of misclassification
+CORRECT_HOLD_TIME = 1.85           # Time in seconds the correct note must be held
+FEEDBACK_DISPLAY_TIME = 1.85 # Time in seconds to display "Correct!"
 
 # --- Classifier Setup ---
 model_path = 'model.tflite'
@@ -39,7 +69,10 @@ detector = htm.handDetector(detectionCon=int(0.7))
 current_note_index = 0
 target_note = NOTE_SEQUENCE[current_note_index]
 correct_note_start_time = None
-last_action_time = time.time() # To track when to switch from 'Correct!' back to 'Holding...'
+last_action_time = time.time() - FEEDBACK_DISPLAY_TIME - 1.0 # To track when to switch from 'Correct!' back to 'Holding...'
+
+# --- Debounce State Variable (New!) ---
+misclassification_count = 0
 
 # --- Main Loop Variables ---
 pTime = 0 
@@ -70,17 +103,17 @@ while True:
         print("Failed to grab frame")
         break
 
-    # --- Hand Tracking (Kept for visual reference) ---
-    frame = detector.findHands(frame)
-    lmList = detector.findPosition(frame, draw=False) 
+    # # --- Hand Tracking (Kept for visual reference) ---
+    # frame = detector.findHands(frame)
+    # lmList = detector.findPosition(frame, draw=False) 
 
-    if len(lmList) != 0:
-        # Drawing logic (kept minimal for clarity)
-        thumbX, thumbY = lmList[4][1], lmList[4][2] 
-        pointerX, pointerY = lmList[8][1], lmList[8][2] 
-        cv.circle(frame, (thumbX, thumbY), 10, (255, 0, 255), cv.FILLED)
-        cv.circle(frame, (pointerX, pointerY), 10, (255, 0, 255), cv.FILLED)
-        cv.line(frame, (thumbX, thumbY), (pointerX, pointerY), (255, 0, 255), 3)
+    # if len(lmList) != 0:
+    #     # Drawing logic (kept minimal for clarity)
+    #     thumbX, thumbY = lmList[4][1], lmList[4][2] 
+    #     pointerX, pointerY = lmList[8][1], lmList[8][2] 
+    #     cv.circle(frame, (thumbX, thumbY), 10, (255, 0, 255), cv.FILLED)
+    #     cv.circle(frame, (pointerX, pointerY), 10, (255, 0, 255), cv.FILLED)
+    #     cv.line(frame, (thumbX, thumbY), (pointerX, pointerY), (255, 0, 255), 3)
 
     # --- Guitar Note Classification ---
     cv.imwrite(image_file_name, frame)
@@ -97,61 +130,91 @@ while True:
     current_time = time.time()
     feedback_message = ""
     
-    # Check if the sequence is complete
+    # Check if the sequence is complete (PRIORITY 1)
     if current_note_index >= len(NOTE_SEQUENCE):
-        feedback_message = "SONG COMPLETE! 🎉"
-        target_note = "" # Clear target
+        feedback_message = "SONG COMPLETE! Well Done! 🎉"
+        target_note = ""
         correct_note_start_time = None
     else:
         # Check if the detected note matches the target note
         if detected_note == target_note.lower():
             
-            if correct_note_start_time is None:
-                # Start the timer for holding the correct note
+            # Reset misclassification count if correct
+            misclassification_count = 0
+            
+            # CONDITION 1: Check to START the timer
+            # The timer only starts if it's currently None AND the feedback period is over.
+            if correct_note_start_time is None and (current_time - last_action_time) > FEEDBACK_DISPLAY_TIME:
                 correct_note_start_time = current_time
             
-            # Check if the note has been held long enough
-            elif (current_time - correct_note_start_time) >= CORRECT_HOLD_TIME:
+            # CONDITION 2: Check to ADVANCE the note (Timer is running AND time is up)
+            elif correct_note_start_time is not None and (current_time - correct_note_start_time) >= CORRECT_HOLD_TIME:
                 
-                # Move to the next note in the sequence
+                # Advance note and set up SUCCESS feedback
                 current_note_index += 1
                 if current_note_index < len(NOTE_SEQUENCE):
                     target_note = NOTE_SEQUENCE[current_note_index]
-                    feedback_message = "CORRECT! ✅ Next Note Ready..."
+                    # This message is displayed during the feedback period by the logic below
+                    feedback_message = "CORRECT! Next Note Ready..." 
                 else:
-                    feedback_message = "CORRECT! ✅" # Final correct note
+                    feedback_message = "CORRECT!" 
                     
-                correct_note_start_time = None # Reset timer
-                last_action_time = current_time # Start feedback display timer
+                correct_note_start_time = None # Reset hold timer
+                last_action_time = current_time # Reset feedback timer
                 
         else:
-            # If the detected note is wrong, reset the hold timer
-            correct_note_start_time = None
+            # --- Debounce Logic (WRONG NOTE DETECTED) ---
+            misclassification_count += 1
             
-        # Determine the user instruction message
-        if current_note_index < len(NOTE_SEQUENCE):
-            if current_note_index == 0 or (current_time - last_action_time) > FEEDBACK_DISPLAY_TIME:
-                # Default instruction: wait for the target note
-                feedback_message = f"Hold **{target_note.upper()}** (Note {current_note_index + 1}/{len(NOTE_SEQUENCE)})"
-                if correct_note_start_time:
-                    # Show progress bar/timer
-                    progress = (current_time - correct_note_start_time) / CORRECT_HOLD_TIME
-                    progress_int = int(progress * 10)
-                    feedback_message += " [" + "#" * progress_int + "-" * (10 - progress_int) + "]"
+            if correct_note_start_time is not None and misclassification_count < MISCLASSIFICATION_THRESHOLD:
+                pass # Still within the debounce grace period
+            else:
+                correct_note_start_time = None # RESET hold timer
+                misclassification_count = 0 
+                
+    # --- Determine the Display Message (PRIORITY 2 & 3) ---
+    
+    # PRIORITY 2: Display SUCCESS FEEDBACK if the timer hasn't expired
+    if current_note_index < len(NOTE_SEQUENCE) and (current_time - last_action_time) <= FEEDBACK_DISPLAY_TIME:
+        # We need to know if the last action was *advancing* the note, which we can check
+        # by seeing if we are in the initial frames of the sequence (current_note_index > 0)
+        
+        # If the success message was set in the block above, use it. Otherwise, assume default success text.
+        if "CORRECT" not in feedback_message:
+            feedback_message = "CORRECT! Next Note Ready..."
+            
+    # PRIORITY 3: Display HOLD INSTRUCTION (only if NOT COMPLETE and NOT in feedback period)
+    elif current_note_index < len(NOTE_SEQUENCE):
+        # Default instruction: wait for the target note (If no feedback is active)
+        
+        # Use a more descriptive instruction from your INSTRUCTIONS dict
+        # instruction_text = INSTRUCTIONS.get(target_note, f"Hold {NOTES_MAPPED.get(target_note, target_note).upper()}")
+
+        # Build the message
+        feedback_message = f"Hold {NOTES_MAPPED.get(target_note, target_note).upper()} | Note {current_note_index + 1}/{len(NOTE_SEQUENCE)}"
+        
+        # Append the progress bar if the hold timer is running
+        if correct_note_start_time is not None:
+            progress = (current_time - correct_note_start_time) / CORRECT_HOLD_TIME
+            progress = min(1.0, progress) # Cap progress at 100%
+            progress_int = int(progress * 10)
+            feedback_message += " [" + "#" * progress_int + "-" * (10 - progress_int) + "]"
 
     # --- Drawing Text on Frame ---
     
     # 1. Instruction/Feedback Message (Large, Center Top)
     if feedback_message:
-        text_color = (0, 255, 0) if "CORRECT" in feedback_message or "COMPLETE" in feedback_message else (255, 255, 255)
-        text_pos = (wCam // 2 - 200, 50)
-        cv.putText(frame, feedback_message.replace('**',''), text_pos, 
-                   cv.FONT_HERSHEY_SIMPLEX, 1, text_color, 2)
-                   
-    # 2. Currently Detected Note (Top Left)
-    detected_text = f"Detected: {raw_detected_label} ({confidence:.1f}%)"
-    cv.putText(frame, detected_text, (10, hCam - 30), 
-               cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2) 
+        # Use BOLD for the instruction text
+        display_text = feedback_message.replace('**','')
+        text_color = (0, 255, 0) if "CORRECT" in display_text or "COMPLETE" in display_text else (255, 255, 255)
+        text_pos = (wCam // 2 - 280, 50)
+        cv.putText(frame, display_text, text_pos, 
+                    cv.FONT_HERSHEY_SIMPLEX, 1, text_color, 2)
+                    
+    # 2. Current Instruction (Bottom Left) - Keep this for the detailed text
+    instruction_text = f"Instruction: {INSTRUCTIONS.get(target_note, 'N/A')}"
+    cv.putText(frame, instruction_text, (10, hCam - 30), 
+               cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
     # 3. Show the frame
     cv.imshow('Guitar Note Trainer', frame)
