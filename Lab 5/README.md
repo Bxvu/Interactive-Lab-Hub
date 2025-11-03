@@ -2,6 +2,7 @@
 
 **NAMES OF COLLABORATORS HERE**
 
+Benthan Vu (bv233)
 
 <details>
 	<summary><strong>Instructions</strong></summary>
@@ -78,6 +79,11 @@ Read the `infer.py` script and become familiar with the code. You can change the
 </details>
 
 
+### Pytorch Usage
+
+![pytorch test](part%202/readme_assets/pytorch.png)
+
+
 #### More classes
 
 <details>
@@ -117,6 +123,10 @@ Consider how you might use this position based approach to create an interaction
 </details>
 
 
+### Mediapipe Usage
+
+![mediapipe test](part%202/readme_assets/mediapipe.png)
+
 
 #### Moondream Vision-Language Model
 
@@ -138,6 +148,11 @@ This will capture an image from your webcam and let you ask questions about it i
 
 **Design consideration**: Think about how slower response times change your interaction design. What kinds of observant systems benefit from thoughtful, delayed responses rather than real-time classification? Consider systems that monitor over longer time periods or provide periodic summaries rather than instant feedback.
 </details>
+
+### Moondream Usage
+
+![moondream test](part%202/readme_assets/moondream-test.png)
+
 
 #### Teachable Machines
 
@@ -165,6 +180,13 @@ Next train your own model. Visit [TeachableMachines](https://teachablemachine.wi
 
 Include screenshots of your use of Teachable Machines, and write how you might use this to create your own classifier. Include what different affordances this method brings, compared to the OpenCV or MediaPipe options.
 
+
+### Teachable Machine Usage
+
+![tm teest](part%202/readme_assets/tm-example.png)
+
+![trying small amount](part%202/readme_assets/tm-1.png)
+
 How I could use Teachable Machines is use it to create my own classifier by having it detect fingers on frets. I will have it be simple because I do not think I can gather enough data for all different fret and string combinations in 2 weeks. So I will train the model to guide the user on how to play a simple happy birthday song. So the teachable machine part should probably recognize the guitar note being held visually, as well as the audio noise when it is played. 
 
 <details>
@@ -185,52 +207,56 @@ In an earlier version of this class students experimented with foundational comp
 * This can be as simple as the boat detector shown in lecture.
 * Try out different interaction outputs and inputs.
 
-I will pick the teachable machines model and teach it 6 classes based on 5 notes that require holding a fret in the happy birthday song + nothing class. I tried different interaction outputs with teachable machines and google colab.
-
 **\*\*\*Describe and detail the interaction, as well as your experimentation here.\*\*\***
+
+I will pick the teachable machines model and teach it 6 classes based on 5 notes that require holding a fret in the happy birthday song + nothing class. I tried different interaction outputs with teachable machines and google colab. My experimentation so far with giving it the f and g notes on the first string of the guitar + nothing class, seems fine at first glance, so I will add the other 3 notes that need to be held.
+
+![tm](part%202/readme_assets/tm-2.png)
 
 ### Part C
 ### Test the interaction prototype
 
 Now flight test your interactive prototype and **note down your observations**:
 For example:
-1. When does it what it is supposed to do?
+1. **When does it what it is supposed to do?**
 
 It does what its supposed to do when the user places their finger in such a way on the fret that the model classifies it correctly.
 
-1. When does it fail?
+1. **When does it fail?**
 
 It fails when the lighting is bad or the user places their finger on the fret in a way that confuses the classifier.
 
-1. When it fails, why does it fail?
+1. **When it fails, why does it fail?**
 
 It fails because I do not think I have enough data, or need a more complex model than teachable machines.
 
-1. Based on the behavior you have seen, what other scenarios could cause problems?
+1. **Based on the behavior you have seen, what other scenarios could cause problems?**
 
-The other scenarios that could cause problems are background noise, the guitar not being close enough to the camera, and fingers being placed on frets not trained by the model.
+The other scenarios that could cause problems are the guitar not being close enough to the camera, hands/fingers that don't look similar to mine (overfitting), having the wrong amount of light, and fingers being placed on frets not trained by the model.
 
 
 **\*\*\*Think about someone using the system. Describe how you think this will work.\*\*\***
-1. Are they aware of the uncertainties in the system?
+1. **Are they aware of the uncertainties in the system?**
 
 I do not think they would be aware of the system uncertainties. They would probably think that the model works 100% and may get confused about what fret to put their finger on.
 
-1. How bad would they be impacted by a miss classification?
+1. **How bad would they be impacted by a miss classification?**
 
 It would pretty bad since the user could get confused about what they need to do.
 
-1. How could change your interactive system to address this?
+1. **How could change your interactive system to address this?**
 
-I could try to add more training data, or add instruction text on the screen.  I could also make the program also use audio and not go to the next note until it hears the correct one being played.
+I could try to add more training data, or add instruction text on the screen. I could also make the program also use audio and not go to the next note until it hears the correct one being played.
 
-1. Are there optimizations you can try to do on your sense-making algorithm.
+1. **Are there optimizations you can try to do on your sense-making algorithm.**
 
 I could try to first have the model detect whether the user's finger is placed on the 1st or 2nd string.
 
 ### Part D
 ### Characterize your own Observant system
 
+<details>
+	<summary><strong>Instructions</strong></summary>
 Now that you have experimented with one or more of these sense-making systems **characterize their behavior**.
 During the lecture, we mentioned questions to help characterize a material:
 * What can you use X for?
@@ -240,11 +266,98 @@ During the lecture, we mentioned questions to help characterize a material:
 * When it breaks how will X break?
 * What are other properties/behaviors of X?
 * How does X feel?
+</details>
 
 **\*\*\*Include a short video demonstrating the answers to these questions.\*\*\***
+
+
+*Click Below image for video*
+
+[![Video](https://img.youtube.com/vi/saoiyf5wTfE/maxresdefault.jpg)](https://youtu.be/saoiyf5wTfE)
 
 ### Part 2.
 
 Following exploration and reflection from Part 1, finish building your interactive system, and demonstrate it in use with a video.
 
 **\*\*\*Include a short video demonstrating the finished result.\*\*\***
+
+*Click Below image for video - App process and demonstration*
+
+[![Video](https://img.youtube.com/vi/xW2SPjjvGYQ/maxresdefault.jpg)](https://youtu.be/xW2SPjjvGYQ)
+
+*Click Below image for video - App user test/feedback*
+
+[![Video](https://img.youtube.com/vi/ZkGs_znFQus/maxresdefault.jpg)](https://youtu.be/ZkGs_znFQus)
+
+## Feedback
+### What I noticed
+- I realize the user may not end up remembering what notes to play because they will be busy trying to get the model to notice that they were playing the correct note or holding the correct fret.
+- I also made too many assumptions about how understandable the instructions were. The users assumed they needed to instantly play instead of holding the note first.
+- Sometimes the user's voice would count as the correct note being played.
+- Model detects wrong too often, making it so it goes to the next stage when I place my finger on the guitar trying to help the user
+- The audio model is not accurate enough, so the user has to play correct note repeatedly
+
+### What users said (Users: Frank and Akash(ab3334))
+- They did not know the first string meant the bottom string, not the top string
+- Wants a phase where the program teaches the user where the correct strings are
+- Says a better way could be instead of detecting the hand position, maybe the program places an indicator on the guitar where the user needs to press, like guitar hero
+
+## Reflection
+
+Continuing from part 1, I got a bit more images for each class but it still had a bit of trouble recognizing notes.
+
+![tm](part%202/readme_assets/tm-3.png)
+![tm](part%202/readme_assets/tm-5.png)
+
+I wanted to preprocess the data to remove color and just include edges, so I moved to google colab to train the model and see if its accuracy would be better.
+I was able to preprocess the data but it seemed worse, so I decided to get more data, so I went to different locations around campus to get different backgrounds, as well as changing what shirt I was wearing to hopefully teach the model not to focus on that.
+
+![tm](part%202/readme_assets/g-colab1.png)
+
+# [Link to the colab file above](https://colab.research.google.com/drive/1Jzcf9IXSqz_RhuSM5P-EvCTJLVs-0De7?usp=sharing)
+
+After adding more data, that didn't really work so I looked online to see how other people did it. 
+Here are a few links I found:
+
+	- https://github.com/AlbertMitjans/chord-detection
+	- https://github.com/leonkt/visual-guitar-chord-classifier/tree/master
+	- https://universe.roboflow.com/code-and-chords/guitar-frets-segmenter
+
+The first link seemed like a promising one that was able to mark placement on the guitar, but they had taken down their model weights. They provided their dataset and I tried to train the model to recreate their weights, but I wasn't exactly sure what I needed to do, even google gemini wasn't able to help, so I gave up on that part. Others didn't have any documentation so it would be hard to build off of them.
+
+I was having some issues with notes that use the same fret on different strings confusing the model, so I thought about having two classifiers. One to detect which string was being held, and then another to detect which fret. Unfortunately that didn't help much with accuracy so I gave up on that path.
+
+![tm](part%202/readme_assets/g-colab2.png)
+
+# [Link to the 2nd colab file above](https://colab.research.google.com/drive/1eLRxwYQgtccPz0lLHmet7qNGZHV6TQxJ?usp=sharing)
+
+I switched back to teachable machines and just gave it all my images. I ended up with around 1900. I had 6 classes, and I tried to get around 30+ images for each of them, for every location I went to. I had a few different locations in my room, two locations in the house river room, the house rooftop lounge area, the Tata Collaboratory, a study room in Tata, and two locations in our classroom.
+
+![tm](part%202/readme_assets/tm-4.png)
+
+<details>
+	<summary><strong>Different backgrounds used</strong></summary>
+
+![rooftop](part%202/readme_assets/rooftop.jpg)
+![classroom](part%202/readme_assets/classroom.jpg)
+![classroom](part%202/readme_assets/classroom2.jpg)
+![studyroom](part%202/readme_assets/colab-study.jpg)
+![room](part%202/readme_assets/room1.jpg)
+![room](part%202/readme_assets/room2.jpg)
+![room](part%202/readme_assets/room3.jpg)
+![colab](part%202/readme_assets/colab.jpg)
+![riverroom](part%202/readme_assets/riverroom1.jpg)
+![riverroom](part%202/readme_assets/riverroom2.jpg)
+</details>
+
+I also mislabeled my notes because I remembered them wrong on the guitar, but I was able to fix it with a mapping in my code.
+
+After I got all that data and trained the model, I created the program with the help of google gemini. I started by just having the model detect the user holding the correct note for around a second. After that, I needed to add a way for the program to detect notes from open strings where the user does not need to hold any fret, so I decided to add a sound classifier so it could hear that part. I recorded around 160 samples for the 8 notes to be detected, not including background noise.
+
+![tm](part%202/readme_assets/tm-audio.png)
+
+After I got that part working, I decided to add a faster mode since the feedback message would stay on the screen for a while, long enough that even if you did everything correctly, the notes were so far apart it was hard to notice that it was the happy birthday song being played.
+
+I also remembered some advice from Hauke, the TA, to use mediapipe's hand detection, I started working on it but realized that it may be a bit too many things to do, since the simplest thing I could do was probably hardcode all the different fret positions, but that may also not be possible since there are so many ways to hold a fret. If I were to pick up on this for the lab, I would follow Hauke's advice to get hand data from mediapipe and then train a model on it, which hopefully would be better.
+
+After all that, I tested the program one more time and thought it was okay enough to be tested by others. And boy was I wrong. Sometimes the program would misunderstand me or the user talking as a note being played. This was probably because I never put clear speaking voices into the background noise class when training the model. Other times I would be correcting the user holding the wrong fret, and the program would recognize the fret as being held and then move to the next stage before the user got to hold it for themselves. Other times the audio model would not recognize the correct note being played, which would confuse the user and I would have to step in to either manually mark the note as correct, or tell them to move the guitar and play differently until it gets recognized. The program also needs more onboarding to help the user learn the difference between the 'play' and 'hold' stages, since the users sometimes would instantly play the note instead of holding it in front of the camera. The onboarding stage could also include which string is considered the first one, as one user did not know that the bottom string counted as the first. Other than adding the onboarding stage to help users understand the flow of the app, I think the only other thing would be to increase the accuracy of both the visual and audio detectors, since they are both not good enough right now to have a smooth play through of the happy birthday song.
