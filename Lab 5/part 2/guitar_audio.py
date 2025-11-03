@@ -21,7 +21,6 @@ cap = cv.VideoCapture(0)
 
 # --- Configuration ---
 # Simplified "Happy Birthday" sequence
-# actually cecdegecffede
 NOTE_SEQUENCE = ['3s', '3s', 'c', '3s', 'e', '2s',
                 '3s', '3s', 'c', '3s', 'd', 'e', 
                 '3s', '3s', 'g', '1s', 'e', '2s', 'c',
@@ -60,6 +59,20 @@ MISCLASSIFICATION_THRESHOLD_MAX = 14  # Max threshold at 90%+ progress
 CORRECT_HOLD_TIME = 1.85           # Time in seconds the correct note must be held
 FEEDBACK_DISPLAY_TIME = 1.85 # Time in seconds to display "Correct!"
 
+# --- Game Mode Configuration ---
+GAME_MODE = "normal"  # Options: "normal" or "speed"
+# Speed mode settings
+SPEED_MODE_HOLD_TIME = 0.8
+SPEED_MODE_FEEDBACK_TIME = 0.5
+# Speed mode misclassification thresholds (more lenient)
+SPEED_MODE_THRESHOLD_BASE = 15  # Higher base = more lenient
+SPEED_MODE_THRESHOLD_MAX = 25   # Higher max = much more lenient at high progress
+
+# --- Silence Detection Configuration ---
+SILENCE_FRAMES_REQUIRED = 3  # Number of consecutive silent frames needed before accepting next note
+silence_frame_count = 0  # Tracks consecutive frames with no notes detected
+waiting_for_silence = False  # Flag: if True, must detect silence before accepting next note
+
 # --- Classifier Setup ---
 model_path = 'model.tflite'
 image_file_name = "frame.jpg"
@@ -76,7 +89,17 @@ detector = htm.handDetector(detectionCon=int(0.7))
 current_note_index = 0
 target_note = NOTE_SEQUENCE[current_note_index]
 correct_note_start_time = None
-last_action_time = time.time() - FEEDBACK_DISPLAY_TIME - 1.0 
+
+# Apply mode-specific timings
+if GAME_MODE == "speed":
+    last_action_time = time.time() - SPEED_MODE_FEEDBACK_TIME - 1.0
+    active_hold_time = SPEED_MODE_HOLD_TIME
+    active_feedback_time = SPEED_MODE_FEEDBACK_TIME
+else:
+    last_action_time = time.time() - FEEDBACK_DISPLAY_TIME - 1.0
+    active_hold_time = CORRECT_HOLD_TIME
+    active_feedback_time = FEEDBACK_DISPLAY_TIME
+
 misclassification_count = 0
 
 # NEW: State tracking for the two-stage process
@@ -169,17 +192,17 @@ while True:
         print("Failed to grab frame")
         break
 
-    # # --- Hand Tracking (Kept for visual reference) ---
-    # frame = detector.findHands(frame)
-    # lmList = detector.findPosition(frame, draw=False) 
+    # --- Hand Tracking (Kept for visual reference) ---
+    frame = detector.findHands(frame)
+    lmList = detector.findPosition(frame, draw=False) 
 
     # if len(lmList) != 0:
     #     # Drawing logic (kept minimal for clarity)
     #     thumbX, thumbY = lmList[4][1], lmList[4][2] 
     #     pointerX, pointerY = lmList[8][1], lmList[8][2] 
-    #     cv.circle(frame, (thumbX, thumbY), 10, (255, 0, 255), cv.FILLED)
-    #     cv.circle(frame, (pointerX, pointerY), 10, (255, 0, 255), cv.FILLED)
-    #     cv.line(frame, (thumbX, thumbY), (pointerX, pointerY), (255, 0, 255), 3)
+    #     # cv.circle(frame, (thumbX, thumbY), 10, (255, 0, 255), cv.FILLED)
+    #     # cv.circle(frame, (pointerX, pointerY), 10, (255, 0, 255), cv.FILLED)
+    #     # cv.line(frame, (thumbX, thumbY), (pointerX, pointerY), (255, 0, 255), 3)
 
     # --- Guitar Note Classification ---
     cv.imwrite(image_file_name, frame)
@@ -238,6 +261,17 @@ while True:
                 
                 # Print the detected note and confidence to the console
                 print(f"HIGH CONFIDENCE AUDIO DETECTED: {note_label} (cleaned: {cleaned}) at {confidence_percent:.2f}%")
+        
+        # Track silence for note separation (background noise also counts as silence)
+        if len(detected_audio_notes) == 0 or raw_audio_label == "8 Background Noise":
+            # No notes detected OR background noise detected - increment silence counter
+            silence_frame_count += 1
+            if silence_frame_count >= SILENCE_FRAMES_REQUIRED and waiting_for_silence:
+                print(f"SILENCE DETECTED ({silence_frame_count} frames) - Ready for next note")
+                waiting_for_silence = False
+        else:
+            # Notes detected - reset silence counter
+            silence_frame_count = 0
 
         # Sort predictions by confidence in descending order
         sorted_indices = np.argsort(probabilities)[::-1]
@@ -288,23 +322,31 @@ while True:
             
             # Calculate dynamic threshold based on progress
             if correct_note_start_time is not None:
-                progress = (current_time - correct_note_start_time) / CORRECT_HOLD_TIME
+                progress = (current_time - correct_note_start_time) / active_hold_time
                 progress = min(1.0, progress)
                 
+                # Use mode-specific thresholds
+                if GAME_MODE == "speed":
+                    threshold_base = SPEED_MODE_THRESHOLD_BASE
+                    threshold_max = SPEED_MODE_THRESHOLD_MAX
+                else:
+                    threshold_base = MISCLASSIFICATION_THRESHOLD_BASE
+                    threshold_max = MISCLASSIFICATION_THRESHOLD_MAX
+                
                 # Ramp up tolerance: more lenient as progress increases
-                # At 0% progress: use base threshold (7 frames)
-                # At 90%+ progress: use max threshold (20 frames)
+                # At 0% progress: use base threshold
+                # At 90%+ progress: use max threshold
                 if progress < 0.9:
                     # Linear interpolation from base to max
-                    dynamic_threshold = MISCLASSIFICATION_THRESHOLD_BASE + \
-                                      (MISCLASSIFICATION_THRESHOLD_MAX - MISCLASSIFICATION_THRESHOLD_BASE) * (progress / 0.9)
+                    dynamic_threshold = threshold_base + \
+                                      (threshold_max - threshold_base) * (progress / 0.9)
                 else:
-                    dynamic_threshold = MISCLASSIFICATION_THRESHOLD_MAX
+                    dynamic_threshold = threshold_max
                 
                 dynamic_threshold = int(dynamic_threshold)
             else:
                 # No progress yet, use base threshold
-                dynamic_threshold = MISCLASSIFICATION_THRESHOLD_BASE
+                dynamic_threshold = SPEED_MODE_THRESHOLD_BASE if GAME_MODE == "speed" else MISCLASSIFICATION_THRESHOLD_BASE
             
             # CONDITION: Correct VISUAL note is held
             if detected_note == target_clean:
@@ -312,15 +354,15 @@ while True:
                 misclassification_count = 0
                 
                 # Check 1: START THE HOLD TIMER
-                if correct_note_start_time is None and (current_time - last_action_time) > FEEDBACK_DISPLAY_TIME:
+                if correct_note_start_time is None and (current_time - last_action_time) > active_feedback_time:
                     correct_note_start_time = current_time
                 
                 # Check 2: ADVANCE STAGE (Hold timer finished)
-                elif correct_note_start_time is not None and (current_time - correct_note_start_time) >= CORRECT_HOLD_TIME:
+                elif correct_note_start_time is not None and (current_time - correct_note_start_time) >= active_hold_time:
                     stage = STAGE_PLAY # Move to the next stage
                     correct_note_start_time = None # Reset timer
                     last_action_time = current_time # Start feedback timer
-                    feedback_message = "POSITION HELD! ✅ Now Play the Note!" 
+                    feedback_message = "POSITION HELD! Now Play the Note!" 
                     
             else:
                 # --- Debounce Logic (WRONG FRET DETECTED) ---
@@ -334,34 +376,47 @@ while True:
         # --- STAGE 2: PLAY NOTE (Audio Check Only) ---
         elif stage == STAGE_PLAY or is_open_string: # Open strings skip directly here
             
-            # Determine the audio target (use the mapped note for the sound model)
-            # First get the expected note name from NOTES_MAPPED
-            expected_note_name = NOTES_MAPPED.get(target_clean, target_clean)
-            
-            # Now find which audio label maps to that note name
-            # Reverse lookup: find the key in AUDIO_NOTES_MAP whose value matches expected_note_name
-            audio_target_label = None
-            for audio_label, note_name in AUDIO_NOTES_MAP.items():
-                if note_name == expected_note_name:
-                    audio_target_label = audio_label
-                    break
-
-            # Check if the audio note was detected (using the stored detections)
             audio_detected = False
-            if audio_target_label is not None and 'detected_audio_notes' in locals():
-                cleaned_target = clean_label(audio_target_label)
-                if cleaned_target in detected_audio_notes:
-                    confidence = detected_audio_notes[cleaned_target]
-                    audio_detected = True
-                    print(f"MATCH! Expected: {audio_target_label} (cleaned: {cleaned_target}), Confidence: {confidence:.2f}%")
-                # else:
-                    # print(f"Expected: {audio_target_label} (cleaned: {cleaned_target}) - Not detected above threshold")
             
-            # CONDITION: Correct AUDIO note is played
+            # CRITICAL: Only check for notes if we're not waiting for silence
+            if not waiting_for_silence:
+                # Speed mode: accept ANY note played above threshold
+                if GAME_MODE == "speed":
+                    if 'detected_audio_notes' in locals() and len(detected_audio_notes) > 0:
+                        # Any note detected means success
+                        audio_detected = True
+                        detected_note_list = list(detected_audio_notes.keys())
+                        print(f"SPEED MODE - ANY NOTE ACCEPTED: {detected_note_list[0]}")
+                
+                # Normal mode: check for specific note
+                else:
+                    # Determine the audio target (use the mapped note for the sound model)
+                    # First get the expected note name from NOTES_MAPPED
+                    expected_note_name = NOTES_MAPPED.get(target_clean, target_clean)
+                    
+                    # Now find which audio label maps to that note name
+                    # Reverse lookup: find the key in AUDIO_NOTES_MAP whose value matches expected_note_name
+                    audio_target_label = None
+                    for audio_label, note_name in AUDIO_NOTES_MAP.items():
+                        if note_name == expected_note_name:
+                            audio_target_label = audio_label
+                            break
+
+                    # Check if the audio note was detected (using the stored detections)
+                    if audio_target_label is not None and 'detected_audio_notes' in locals():
+                        cleaned_target = clean_label(audio_target_label)
+                        if cleaned_target in detected_audio_notes:
+                            confidence = detected_audio_notes[cleaned_target]
+                            audio_detected = True
+                            print(f"MATCH! Expected: {audio_target_label} (cleaned: {cleaned_target}), Confidence: {confidence:.2f}%")
+                        # else:
+                            # print(f"Expected: {audio_target_label} (cleaned: {cleaned_target}) - Not detected above threshold")
+            
+            # CONDITION: Correct AUDIO note is played (or any note in speed mode)
             if audio_detected:
                 
                 # This check only needs to pass once per note
-                if (current_time - last_action_time) > FEEDBACK_DISPLAY_TIME:
+                if (current_time - last_action_time) > active_feedback_time:
                     
                     # Advance note and set up SUCCESS feedback (Move to next song note)
                     current_note_index += 1
@@ -376,6 +431,11 @@ while True:
                     correct_note_start_time = None # Reset hold timer
                     last_action_time = current_time # Reset feedback timer
                     
+                    # NEW: Set flag to wait for silence before accepting next note
+                    waiting_for_silence = True
+                    silence_frame_count = 0
+                    print("Note completed - waiting for silence before next note")
+                    
             else:
                 # If the audio is wrong, we don't reset anything, just wait for the strum.
                 # If the user strums a wrong note, they just try again.
@@ -384,7 +444,7 @@ while True:
     # --- Determine the Display Message (PRIORITY 2 & 3) ---
     
     # PRIORITY 2: Display SUCCESS FEEDBACK if the timer hasn't expired
-    if current_note_index < len(NOTE_SEQUENCE) and (current_time - last_action_time) <= FEEDBACK_DISPLAY_TIME:
+    if current_note_index < len(NOTE_SEQUENCE) and (current_time - last_action_time) <= active_feedback_time:
         # We need to know if the last action was *advancing* the note, which we can check
         # by seeing if we are in the initial frames of the sequence (current_note_index > 0)
         
@@ -440,14 +500,25 @@ while True:
     # cv.putText(frame, instruction_text, (10, hCam - 30), 
     #            cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
-    detected_text_visual = f"Visual: {raw_detected_label} ({confidence:.1f}%)"
-    cv.putText(frame, detected_text_visual, (10, hCam - 55), 
-               cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+    # detected_text_visual = f"Visual: {raw_detected_label} ({confidence:.1f}%)"
+    # cv.putText(frame, detected_text_visual, (10, hCam - 80), 
+    #            cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
                
-    # NEW: Display ALL Audio Predictions (Below the visual info)
-    detected_text_audio_all = f"Audio Top: {audio_predictions_text}"
-    cv.putText(frame, detected_text_audio_all, (10, hCam - 30), 
-               cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2) # Cyan color for audio debug
+    # # NEW: Display ALL Audio Predictions (Below the visual info)
+    # detected_text_audio_all = f"Audio Top: {audio_predictions_text}"
+    # cv.putText(frame, detected_text_audio_all, (10, hCam - 55), 
+    #            cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2) # Cyan color for audio debug
+    
+    # Display current game mode (Bottom left)
+    mode_text = f"Mode: {GAME_MODE.upper()}"
+    mode_color = (0, 255, 255) if GAME_MODE == "speed" else (255, 255, 255)  # Cyan for speed, white for normal
+    cv.putText(frame, mode_text, (10, hCam - 30), 
+               cv.FONT_HERSHEY_SIMPLEX, 0.6, mode_color, 2)
+    
+    # Display controls hint (Bottom right)
+    controls_text = "Press M to toggle mode | S to skip"
+    cv.putText(frame, controls_text, (wCam - 400, hCam - 30), 
+               cv.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
 
     # 3. Show the frame
     cv.imshow('Guitar Note Trainer', frame)
@@ -458,6 +529,25 @@ while True:
     # ESC key to exit
     if k % 256 == 27: 
         break
+    
+    # 'M' key to toggle game mode
+    elif k % 256 == ord('m') or k % 256 == ord('M'):
+        if GAME_MODE == "normal":
+            GAME_MODE = "speed"
+            active_hold_time = SPEED_MODE_HOLD_TIME
+            active_feedback_time = SPEED_MODE_FEEDBACK_TIME
+            feedback_message = "SPEED MODE ACTIVATED! ⚡"
+            print("Switched to SPEED MODE")
+        else:
+            GAME_MODE = "normal"
+            active_hold_time = CORRECT_HOLD_TIME
+            active_feedback_time = FEEDBACK_DISPLAY_TIME
+            feedback_message = "NORMAL MODE ACTIVATED"
+            print("Switched to NORMAL MODE")
+        
+        # Reset timers when switching modes
+        correct_note_start_time = None
+        last_action_time = current_time
     
     # 'S' key to skip current note/stage
     elif k % 256 == ord('s') or k % 256 == ord('S'):
