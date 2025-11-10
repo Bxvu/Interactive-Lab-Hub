@@ -304,7 +304,7 @@ Our project implements a collaborative robot arm controlled by three Raspberry P
 
 **2. Architecture Diagram**
 
-![diagram](assets/diagram.png)
+![diagram](https://github.com/Bxvu/Interactive-Lab-Hub/blob/Fall2025/Lab%206/assets/diagram.png)
 
 ## Technical Components
 
@@ -321,9 +321,9 @@ Our project implements a collaborative robot arm controlled by three Raspberry P
 
 **3. Build Documentation**
 
-![pi_joystick](assets/pi_joystick.jpg)
-![robot_arm](assets/robot_arm.jpg)
-![setup1](assets/setup1.jpg)
+![pi_joystick](https://github.com/Bxvu/Interactive-Lab-Hub/blob/Fall2025/Lab%206/assets/pi_joystick.jpg)
+![robot_arm](https://github.com/Bxvu/Interactive-Lab-Hub/blob/Fall2025/Lab%206/assets/robot_arm.jpg)
+![setup1](https://github.com/Bxvu/Interactive-Lab-Hub/blob/Fall2025/Lab%206/assets/setup1.jpg)
 
 ## Technical Implementation
 
@@ -350,7 +350,7 @@ Subscribes to all subtopics under `IDD/robotarm/#`, decodes incoming JSON messag
 
 ## Code Snippets
 
-![code](assets/code.jpg)
+![code](https://github.com/Bxvu/Interactive-Lab-Hub/blob/Fall2025/Lab%206/assets/code.jpg)
 
 #### Joystick
 ```
